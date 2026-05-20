@@ -99,7 +99,7 @@ class TokenFactory:
     def close(self) -> None:
         self._httpx_client.close()
 
-    def __enter__(self) -> "TokenFactory":
+    def __enter__(self) -> TokenFactory:
         return self
 
     def __exit__(self, *args) -> None:

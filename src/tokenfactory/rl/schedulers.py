@@ -52,8 +52,7 @@ Sample = TypeVar("Sample")
 
 
 class BaseRolloutScheduler(Generic[TaskID, Sample], ABC):
-    """
-    Rollout scheduler is responsible for deciding how many new rollouts it is
+    """Rollout scheduler is responsible for deciding how many new rollouts it is
     possible to spawn at each moment, and for returning completed samples in
     such an order that doesn't break constraints of a scheduler.
 
@@ -109,7 +108,8 @@ class BaseRolloutScheduler(Generic[TaskID, Sample], ABC):
     @abstractmethod
     def _get_num_rollouts_to_spawn(self) -> int:
         """Calculate the number of rollouts that can be spawned at the current moment,
-        based on internal state and limitations of a concrete scheduler."""
+        based on internal state and limitations of a concrete scheduler.
+        """
 
     @property
     def is_spawning_finished(self) -> bool:
@@ -233,7 +233,8 @@ class AnyStalenessRolloutScheduler(
 ):
     """Scheduler without staleness checks: all samples go to batch in order
     of appearance. Always spawns the maximum number of trajectories
-    that allows `parallel_rollouts`."""
+    that allows `parallel_rollouts`.
+    """
 
     def _consume_sample_group(self, task_id: TaskID, sample_group: Sequence[Sample]):
         self._add_ready_sample_group(sample_group=sample_group)
@@ -250,7 +251,8 @@ class DropStaleRolloutScheduler(
     BaseRolloutScheduler[TaskID, Sample], Generic[TaskID, Sample]
 ):
     """Spawns the maximum number of trajectories that allows `parallel_rollouts`
-    and drops samples that exceed `allowed_staleness`."""
+    and drops samples that exceed `allowed_staleness`.
+    """
 
     def _consume_sample_group(self, task_id: TaskID, sample_group: Sequence[Sample]):
         assert isinstance(self._batch_index, int)
@@ -275,7 +277,8 @@ class DroplessRolloutScheduler(
     BaseRolloutScheduler[TaskID, Sample], Generic[TaskID, Sample]
 ):
     """Never drops samples. Waits for stragglers when they are about to exceed
-    `allowed_staleness` and buffers samples that arrive during that time."""
+    `allowed_staleness` and buffers samples that arrive during that time.
+    """
 
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
@@ -331,7 +334,8 @@ class DroplessRolloutScheduler(
         self, task_id: TaskID, sample_group: Sequence[Sample], is_pending: bool = False
     ) -> bool:
         """For the current batch, we calculate the number of reserved places
-        for samples from trajectories started in different inference versions."""
+        for samples from trajectories started in different inference versions.
+        """
         reserved_places: deque[tuple[int, int]] = deque()
         if len(self._tasks_by_inference_version) > 0:
             inf_versions = self._tasks_by_inference_version.keys()

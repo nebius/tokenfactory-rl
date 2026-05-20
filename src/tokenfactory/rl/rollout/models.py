@@ -3,6 +3,7 @@ from dataclasses import dataclass, field
 from typing import Any, ClassVar, Generic, TypeVar
 from uuid import uuid4
 
+from typing_extensions import Self
 
 TaskSpec = TypeVar("TaskSpec")
 
@@ -12,7 +13,7 @@ class BaseID(ABC, str):
     prefix: ClassVar[str | None] = None
 
     @classmethod
-    def generate(cls) -> "BaseID":
+    def generate(cls) -> Self:
         if cls.prefix is None:
             raise NotImplementedError("Prefix must be set for ID generation.")
         return cls(f"{cls.prefix}-{uuid4().hex}")

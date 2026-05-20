@@ -51,7 +51,7 @@ def roll_out_task(
 
     completion = context.openai_client.chat.completions.create(
         model=context.config.model_name,
-        messages=messages,  # type: ignore[reportArgumentType]
+        messages=messages,  # ty: ignore[invalid-argument-type]
         extra_body={"return_token_ids": True, "logprobs": True},
     )
     token_ids, logprobs, mask = parse_completion(completion)

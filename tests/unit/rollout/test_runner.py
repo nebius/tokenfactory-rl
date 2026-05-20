@@ -132,12 +132,12 @@ def _make_runner(
     rollout_fn=None,
     dataset=None,
 ) -> RolloutRunner[FakeTaskSpec]:
-    return RolloutRunner(
+    return RolloutRunner( # ty: ignore[invalid-return-type]
         api_client=api_client or _make_api_client(),
         config=config or _make_config(),
         rollout_fn=rollout_fn
         or MagicMock(return_value=SampleGroup(samples=[_make_sample()])),
-        dataset=dataset or FakeDataset(),  # type: ignore[reportArgumentType]
+        dataset=dataset or FakeDataset(),  # ty: ignore[invalid-argument-type]
     )
 
 

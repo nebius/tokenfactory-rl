@@ -260,7 +260,8 @@ class RolloutRunner(Generic[TaskSpec_contra]):
 
 class JobStatusTracker(threading.Thread):
     """Thread that polls the status of a rollout job at regular intervals
-    and sends updates to the RolloutRunner via a queue."""
+    and sends updates to the RolloutRunner via a queue.
+    """
 
     def __init__(
         self,
@@ -297,7 +298,8 @@ class JobStatusTracker(threading.Thread):
 
 class RolloutDispatcher(threading.Thread, Generic[TaskSpec_contra]):
     """Thread that dispatches rollout tasks to a pool
-    based on the current job status."""
+    based on the current job status.
+    """
 
     def __init__(
         self,

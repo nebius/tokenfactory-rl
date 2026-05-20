@@ -40,7 +40,7 @@ def test_roll_out_task_returns_normalized_rewards_for_all_samples(monkeypatch):
 
     result = roll_out_task(
         task=Task(question="Tell me a random number.", answer="42"),
-        context=context,  # type: ignore[reportArgumentType]
+        context=context,  # ty: ignore[invalid-argument-type]
         my_config=MyConfig(system_prompt="Reply with the answer only."),
     )
 
