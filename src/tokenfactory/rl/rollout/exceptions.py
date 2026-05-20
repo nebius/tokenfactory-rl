@@ -1,4 +1,4 @@
-class JobInitializationTimeout(Exception):
+class JobInitializationTimeout(Exception):  # noqa:N818
     def __init__(
         self,
         *,
@@ -6,10 +6,7 @@ class JobInitializationTimeout(Exception):
         timeout_seconds: int,
         last_exception: Exception | None = None,
     ):
-        message = (
-            f"Rollout job {job_id!r} did not become ready within "
-            f"{timeout_seconds} seconds."
-        )
+        message = f"Rollout job {job_id!r} did not become ready within {timeout_seconds} seconds."
         if last_exception is not None:
             message = f"{message} Last polling error: {last_exception}"
 

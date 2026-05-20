@@ -110,9 +110,7 @@ def _make_api_client() -> MagicMock:
         total_batches=None,
         filled_batches=0,
     )
-    client.v1alpha1.fine_tuning.jobs.batches.get.side_effect = NotFoundError(
-        "not found"
-    )
+    client.v1alpha1.fine_tuning.jobs.batches.get.side_effect = NotFoundError("not found")
     client.v1alpha1.fine_tuning.jobs.batches.create.return_value = Batch(
         object="fine_tuning.batch",
         index=0,
@@ -132,11 +130,10 @@ def _make_runner(
     rollout_fn=None,
     dataset=None,
 ) -> RolloutRunner[FakeTaskSpec]:
-    return RolloutRunner( # ty: ignore[invalid-return-type]
+    return RolloutRunner(  # ty: ignore[invalid-return-type]
         api_client=api_client or _make_api_client(),
         config=config or _make_config(),
-        rollout_fn=rollout_fn
-        or MagicMock(return_value=SampleGroup(samples=[_make_sample()])),
+        rollout_fn=rollout_fn or MagicMock(return_value=SampleGroup(samples=[_make_sample()])),
         dataset=dataset or FakeDataset(),  # ty: ignore[invalid-argument-type]
     )
 
@@ -162,9 +159,7 @@ class TestInitBatch:
 
         assert batch_idx == 0
         assert n_samples == 0
-        client.v1alpha1.fine_tuning.jobs.batches.create.assert_called_once_with(
-            job_id="test-job", index=0
-        )
+        client.v1alpha1.fine_tuning.jobs.batches.create.assert_called_once_with(job_id="test-job", index=0)
 
     def test_resumes_existing_batch(self):
         client = _make_api_client()
@@ -202,9 +197,7 @@ class TestInitBatch:
         batch_idx, n_samples = runner._load_initial_state()
 
         assert batch_idx == 7
-        client.v1alpha1.fine_tuning.jobs.batches.create.assert_called_once_with(
-            job_id="test-job", index=7
-        )
+        client.v1alpha1.fine_tuning.jobs.batches.create.assert_called_once_with(job_id="test-job", index=7)
 
 
 # ===========================================================================
@@ -277,9 +270,7 @@ class TestWaitForJobInitialization:
 
     def test_raises_when_no_successful_status_response_arrives(self):
         client = _make_api_client()
-        client.v1alpha1.fine_tuning.jobs.get_runtime_status.side_effect = (
-            ConnectionError("network error")
-        )
+        client.v1alpha1.fine_tuning.jobs.get_runtime_status.side_effect = ConnectionError("network error")
         runner = _make_runner(
             api_client=client,
             config=_make_config(job_init_timeout=0, status_polling_interval=0.01),
@@ -293,9 +284,7 @@ class TestWaitForJobInitialization:
 
     def test_raises_with_original_polling_error_as_cause(self):
         client = _make_api_client()
-        client.v1alpha1.fine_tuning.jobs.get_runtime_status.side_effect = (
-            ConnectionError("network error")
-        )
+        client.v1alpha1.fine_tuning.jobs.get_runtime_status.side_effect = ConnectionError("network error")
         runner = _make_runner(
             api_client=client,
             config=_make_config(job_init_timeout=0, status_polling_interval=0.01),
@@ -324,9 +313,7 @@ class TestProcessRolloutResult:
 
         runner._process_rollout_result(task=task, sample_group=group)
 
-        runner._scheduler.add_sample_group.assert_called_once_with(
-            task_id=task.id, samples=[sample]
-        )
+        runner._scheduler.add_sample_group.assert_called_once_with(task_id=task.id, samples=[sample])
         assert sample.debug_info["starting_inference_version"] == 0
 
     def test_rejected_result_removes_task(self):
@@ -404,9 +391,7 @@ class TestSubmitSamples:
 
         assert runner._batch_idx == 1
         assert runner._batch_n_samples == 0
-        client.v1alpha1.fine_tuning.jobs.batches.create.assert_called_once_with(
-            job_id="test-job", index=1
-        )
+        client.v1alpha1.fine_tuning.jobs.batches.create.assert_called_once_with(job_id="test-job", index=1)
 
     def test_no_new_batch_when_not_full(self):
         client = _make_api_client()
@@ -509,12 +494,8 @@ class TestRunLoop:
         runner = _make_runner(api_client=client, config=config)
 
         # Inject a version update followed by two rollout results
-        task1 = Task(
-            id=TaskID("task-001"), spec=FakeTaskSpec(), starting_inference_version=0
-        )
-        task2 = Task(
-            id=TaskID("task-002"), spec=FakeTaskSpec(), starting_inference_version=0
-        )
+        task1 = Task(id=TaskID("task-001"), spec=FakeTaskSpec(), starting_inference_version=0)
+        task2 = Task(id=TaskID("task-002"), spec=FakeTaskSpec(), starting_inference_version=0)
 
         # We need to control the scheduler to complete in 2 results.
         # Easiest: let the real scheduler run but seed events properly.
@@ -599,12 +580,8 @@ class TestRunLoop:
         mock_scheduler.add_sample_group.side_effect = mark_finished
         runner._scheduler = mock_scheduler
 
-        task_rejected = Task(
-            id=TaskID("task-r"), spec=FakeTaskSpec(), starting_inference_version=0
-        )
-        task_ok = Task(
-            id=TaskID("task-ok"), spec=FakeTaskSpec(), starting_inference_version=0
-        )
+        task_rejected = Task(id=TaskID("task-r"), spec=FakeTaskSpec(), starting_inference_version=0)
+        task_ok = Task(id=TaskID("task-ok"), spec=FakeTaskSpec(), starting_inference_version=0)
 
         events = [
             RolloutResult(
@@ -631,9 +608,7 @@ class TestRunLoop:
         runner._scheduler = mock_scheduler
 
         # Feed two status updates, then a result that finishes
-        task = Task(
-            id=TaskID("task-1"), spec=FakeTaskSpec(), starting_inference_version=0
-        )
+        task = Task(id=TaskID("task-1"), spec=FakeTaskSpec(), starting_inference_version=0)
         mock_scheduler.get_ready_samples.return_value = [_make_sample(), _make_sample()]
         mock_scheduler.is_all_finished = False
 
@@ -699,47 +674,33 @@ class TestDroplessPendingDrainBatchBoundary:
 
         # --- register tasks with the real DroplessRolloutScheduler ---
         runner._scheduler.set_inference_version(inference_version=0)
-        t0 = Task(
-            id=TaskID("task-t0"), spec=FakeTaskSpec(), starting_inference_version=0
-        )
+        t0 = Task(id=TaskID("task-t0"), spec=FakeTaskSpec(), starting_inference_version=0)
         runner._scheduler.add_tasks(tasks=[t0])
 
         runner._scheduler.set_inference_version(inference_version=1)
-        t1 = Task(
-            id=TaskID("task-t1"), spec=FakeTaskSpec(), starting_inference_version=1
-        )
-        t2 = Task(
-            id=TaskID("task-t2"), spec=FakeTaskSpec(), starting_inference_version=1
-        )
+        t1 = Task(id=TaskID("task-t1"), spec=FakeTaskSpec(), starting_inference_version=1)
+        t2 = Task(id=TaskID("task-t2"), spec=FakeTaskSpec(), starting_inference_version=1)
         runner._scheduler.add_tasks(tasks=[t1, t2])
 
         # --- complete tasks in an order that triggers pending buffering ---
 
         # t1 completes (v1) → buffered because t0 (v0) reserves the slot
-        runner._process_rollout_result(
-            task=t1, sample_group=SampleGroup(samples=[_make_sample()])
-        )
+        runner._process_rollout_result(task=t1, sample_group=SampleGroup(samples=[_make_sample()]))
         runner._submit_samples()
         assert client.v1alpha1.fine_tuning.jobs.batches.submit_samples.call_count == 0
 
         # t2 completes (v1) → accepted into batch 0
-        runner._process_rollout_result(
-            task=t2, sample_group=SampleGroup(samples=[_make_sample()])
-        )
+        runner._process_rollout_result(task=t2, sample_group=SampleGroup(samples=[_make_sample()]))
         runner._submit_samples()
         assert runner._batch_idx == 1, "batch 0 should be full, runner on batch 1"
 
         # t0 completes (v0) → accepted, AND pending t1 drains.
         # The scheduler returns both samples in one get_ready_samples() call.
-        runner._process_rollout_result(
-            task=t0, sample_group=SampleGroup(samples=[_make_sample()])
-        )
+        runner._process_rollout_result(task=t0, sample_group=SampleGroup(samples=[_make_sample()]))
         runner._submit_samples()
 
         # --- assertions ---
-        submit_calls = (
-            client.v1alpha1.fine_tuning.jobs.batches.submit_samples.call_args_list
-        )
+        submit_calls = client.v1alpha1.fine_tuning.jobs.batches.submit_samples.call_args_list
         batch_indices_submitted = [c.kwargs["batch_index"] for c in submit_calls]
         sample_counts = [len(c.kwargs["samples"]) for c in submit_calls]
 
@@ -879,9 +840,7 @@ class TestRolloutDispatcher:
         num_rollout_retries=0,
         raise_on_rollout_failure=False,
         concurrent_workers=2,
-    ) -> tuple[
-        RolloutDispatcher[FakeTaskSpec], DispatcherInputQueue, DispatcherOutputQueue
-    ]:
+    ) -> tuple[RolloutDispatcher[FakeTaskSpec], DispatcherInputQueue, DispatcherOutputQueue]:
         context = MagicMock()
         input_queue: DispatcherInputQueue = queue.Queue()
         output_queue: DispatcherOutputQueue = queue.Queue()
@@ -1029,15 +988,11 @@ class TestRolloutDispatcher:
     def test_dispatches_multiple_tasks(self):
         rollout_fn = MagicMock(return_value=SampleGroup(samples=[]))
 
-        dispatcher, in_q, out_q = self._make_dispatcher(
-            rollout_fn=rollout_fn, concurrent_workers=4
-        )
+        dispatcher, in_q, out_q = self._make_dispatcher(rollout_fn=rollout_fn, concurrent_workers=4)
         dispatcher.start()
 
         for i in range(5):
-            task = Task(
-                spec=FakeTaskSpec(question=f"q{i}"), starting_inference_version=0
-            )
+            task = Task(spec=FakeTaskSpec(question=f"q{i}"), starting_inference_version=0)
             in_q.put(task)
 
         time.sleep(0.5)

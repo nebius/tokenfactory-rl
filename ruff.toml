@@ -1,0 +1,190 @@
+line-length = 120
+src = ["contree_sdk"]
+
+target-version = "py310"
+
+exclude = [
+    ".git",
+    ".venv",
+    "venv",
+]
+
+preview = true
+
+[lint]
+extend-safe-fixes = [
+    "C408",    # unnecessary-collection-call
+    "PT006",   # pytest-parametrize-names-wrong-type
+    "RUF022",  # unsorted-dunder-all
+    "SIM101",  # duplicate-isinstance-call
+    "SIM108",  # if-else-block-instead-of-if-exp
+    "UP006",   # non-pep585-annotation
+    "UP007",   # non-pep604-annotation-union
+    "UP035",   # deprecated-import
+    "UP038",   # non-pep604-isinstance
+    "PLR6104", # non-augmented-assignment
+]
+extend-unsafe-fixes = [
+    "PGH003", # blanket-type-ignore
+    "RUF100", # unused-noqa
+    "RUF102", # invalid-rule-code
+]
+select = [
+    "A",     # flake8-builtins
+    "AIR",   # Airflow
+    "ANN",   # flake8-annotations
+    "ASYNC", # flake8-async
+    "B",     # flake8-bugbear
+    "C",     # flake8-comprehensions
+    "COM",   # flake8-commas
+    "D",     # pydocstyle
+    "DOC",   # pydoclint
+    "E",     # pycodestyle Error
+    "ERA",   # eradicate
+    "EXE",   # flake8-executable
+    "F",     # Pyflakes
+    "FA",    # flake8-future-annotations
+#    "I",     # isort
+    "LOG",   # flake8-logging
+    "N",     # pep8-naming
+    "PERF",  # Perflint
+    "PGH",   # pygrep-hooks
+    "PIE",   # flake8-pie
+    "PL",    # Pylint
+    "PT",    # flake8-pytest-style
+    "PTH",   # flake8-use-pathlib
+    "PYI",   # flake8-pyi
+    "RET",   # flake8-return
+    "RSE",   # flake8-raise
+    "RUF",   # Ruff-specific rules
+    "S",     # flake8-bandit
+    "SIM",   # flake8-simplify
+    "SLOT",  # flake8-slots
+    "T",     # flake8-debugger
+    "TCH",   # flake8-type-checking
+    "TID",   # flake8-tidy-imports
+    "TRY",   # tryceratops
+    "UP",    # pyupgrade
+    "W",     # pycodestyle Warning
+    "YTT",   # flake8-2020
+]
+
+extend-ignore = [
+    "ANN002", # missing-type-args
+    "ANN003", # missing-type-kwargs
+    "ANN202", # missing-return-type-private-function
+    "ANN204", # missing-return-type-special-method
+    "ANN401", # any-type
+    "COM812", # missing-trailing-comma
+    "E203",   # whitespace-before-punctuation
+    "E741",   # ambiguous-variable-name
+    "PIE790", # unnecessary-placeholder
+    "RUF012", # mutable-class-default
+    "RUF013", # implicit-optional
+    "S311",   # suspicious-non-cryptographic-random-usage
+    "S604",   # hardcoded-password-func-arg
+    "TRY003", # raise-vanilla-args
+    "D203",   # incorrect-blank-line-before-class
+    "D213",   # multi-line-summary-second-line
+    "B903",   # class-as-data-structure
+    "D205",
+    "DOC201",
+    "S101",  # assert
+]
+
+[lint.per-file-ignores]
+
+"tests/**" = [
+    "PLR",
+    "D",       # pydocstyle
+    "DOC",     # pydoclint
+    "RUF069",
+]
+
+"src/tokenfactory/rl/api_client/models.py" = [
+    "ERA001",
+    "N815",
+]
+
+"*" = [
+
+
+    "ASYNC109", # async-function-with-timeout
+    "COM812",   # missing-trailing-comma
+    "D100",     # undocumented-public-module
+    "D101",     # undocumented-public-class
+    "D102",     # undocumented-public-method
+    "D103",     # undocumented-public-function
+    "D104",     # undocumented-public-package
+    "D105",     # undocumented-magic-method
+    "D106",     # undocumented-public-nested-class
+    "D107",     # undocumented-public-init
+    "N813",     # camelcase-imported-as-lowercase
+    "PLC0415",  # import-outside-top-level
+    "PLW1510",  # unspecified-encoding
+    "PLW2901",  # redefined-loop-name
+    "PT019",    # pytest-fixture-param-without-value
+    "PTH118",   # os-path-join
+    "PYI019",   # custom-type-var-for-self
+    "PYI051",   # redundant-literal-union
+    "RUF005",   # collection-literal-concatenation
+    "S404",     # suspicious-subprocess-import
+    "TC",       # typing-only-*-import
+    "PLW1514",
+]
+
+#"tests/**" = [
+#    "PERF",    # perflint
+#    "PLR2004", # magic-value-comparison
+#    "PT011",   # pytest-raises-too-broad
+#    "PT028",   # pytest-parameter-with-default-argument
+#    "RUF029",  # unused-async
+#    "S105",    # hardcoded-password-string
+#]
+
+"tests/**/test_*.py" = [
+    "ANN",      # flake8-annotations-ann
+#    "ASYNC110", # async-busy-wait
+#    "PLC1901",  # compare-to-empty-string
+    "RUF059",   # unused-unpacked-variable
+#    "S101",     # assert
+    "S106",     # hardcoded-password-func-arg
+]
+
+"!tests/**" = [
+    "PLC2701", # import-private-name
+]
+"!src/tokenfactory/rl/examples/**" = [
+    "PLC2701", # import-private-name
+]
+
+
+[lint.mccabe]
+max-complexity = 20
+
+[lint.isort]
+known-first-party = ["contree_sdk"]
+known-third-party = []
+
+combine-as-imports = false
+force-sort-within-sections = false
+lines-after-imports = 2
+split-on-trailing-comma = false
+section-order = ["future", "standard-library", "third-party", "first-party", "local-folder"]
+
+[lint.flake8-annotations]
+suppress-none-returning = true
+
+[lint.flake8-implicit-str-concat]
+allow-multiline = false
+
+[format]
+skip-magic-trailing-comma = false
+
+[lint.flake8-type-checking]
+runtime-evaluated-base-classes = [
+    "pydantic.BaseModel",
+]
+
+[lint.pylint]
+max-args = 12

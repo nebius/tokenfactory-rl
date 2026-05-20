@@ -37,15 +37,11 @@ logger = logging.getLogger(__name__)
 
 TaskSpec_contra = TypeVar("TaskSpec_contra", contravariant=True)
 
-RolloutRunnerInputs = (
-    JobStatusUpdate | RolloutResult[TaskSpec_contra] | RolloutException
-)
+RolloutRunnerInputs = JobStatusUpdate | RolloutResult[TaskSpec_contra] | RolloutException
 
 
 class RolloutFn(Protocol[TaskSpec_contra]):
-    def __call__(
-        self, task: TaskSpec_contra, context: RolloutContext
-    ) -> SampleGroup: ...
+    def __call__(self, task: TaskSpec_contra, context: RolloutContext) -> SampleGroup: ...
 
 
 class RolloutRunner(Generic[TaskSpec_contra]):
@@ -65,22 +61,18 @@ class RolloutRunner(Generic[TaskSpec_contra]):
             config=config,
             api_client=api_client,
         )
-        self._scheduler: BaseRolloutScheduler[TaskID, Sample] = (
-            create_rollout_scheduler(
-                config=RolloutSchedulerConfig(
-                    batch_size=self._config.batch_size,
-                    num_batches=self._config.num_batches,
-                    num_samples_per_task=self._config.num_samples_per_task,
-                    parallel_rollouts=self._config.max_concurrency,
-                    allowed_staleness=self._config.allowed_staleness,
-                    drop_stale_trajectories=self._config.drop_stale_trajectories,
-                )
+        self._scheduler: BaseRolloutScheduler[TaskID, Sample] = create_rollout_scheduler(
+            config=RolloutSchedulerConfig(
+                batch_size=self._config.batch_size,
+                num_batches=self._config.num_batches,
+                num_samples_per_task=self._config.num_samples_per_task,
+                parallel_rollouts=self._config.max_concurrency,
+                allowed_staleness=self._config.allowed_staleness,
+                drop_stale_trajectories=self._config.drop_stale_trajectories,
             )
         )
         self._dispatcher_queue: queue.Queue[Task[TaskSpec_contra]] = queue.Queue()
-        self._input_queue: queue.Queue[RolloutRunnerInputs[TaskSpec_contra]] = (
-            queue.Queue()
-        )
+        self._input_queue: queue.Queue[RolloutRunnerInputs[TaskSpec_contra]] = queue.Queue()
 
         self._job_status_tracker = JobStatusTracker(
             job_id=self._config.job_id,
@@ -104,9 +96,7 @@ class RolloutRunner(Generic[TaskSpec_contra]):
         self._wait_for_job_initialization()
 
         self._batch_idx, self._batch_n_samples = self._load_initial_state()
-        self._scheduler.set_initial_batch_index(
-            batch_index=self._batch_idx, n_samples=self._batch_n_samples
-        )
+        self._scheduler.set_initial_batch_index(batch_index=self._batch_idx, n_samples=self._batch_n_samples)
 
         self._job_status_tracker.start()
         self._rollout_dispatcher.start()
@@ -115,19 +105,11 @@ class RolloutRunner(Generic[TaskSpec_contra]):
             update = self._input_queue.get()
             match update:
                 case JobStatusUpdate(inference_version=inference_version):
-                    logger.info(
-                        f"Received job status update: "
-                        f"inference_version={inference_version}"
-                    )
-                    self._scheduler.set_inference_version(
-                        inference_version=inference_version
-                    )
+                    logger.info(f"Received job status update: inference_version={inference_version}")
+                    self._scheduler.set_inference_version(inference_version=inference_version)
                     self._spawn_tasks()
                 case RolloutResult(task=task, sample_group=sample_group):
-                    logger.debug(
-                        f"Received rollout result for "
-                        f"{task.id=} {sample_group.is_rejected=}"
-                    )
+                    logger.debug(f"Received rollout result for {task.id=} {sample_group.is_rejected=}")
                     self._process_rollout_result(task=task, sample_group=sample_group)
                     self._submit_samples()
                     self._spawn_tasks()
@@ -145,11 +127,7 @@ class RolloutRunner(Generic[TaskSpec_contra]):
                     raise e
 
     def _wait_for_job_initialization(self) -> None:
-        deadline = (
-            None
-            if self._config.job_init_timeout is None
-            else time.monotonic() + self._config.job_init_timeout
-        )
+        deadline = None if self._config.job_init_timeout is None else time.monotonic() + self._config.job_init_timeout
         last_exception: Exception | None = None
 
         while True:
@@ -159,9 +137,7 @@ class RolloutRunner(Generic[TaskSpec_contra]):
                 last_exception = e
                 logger.info(f"Error polling job status during initialization: {e}")
             else:
-                logger.info(
-                    f"Job {self._config.job_id} responded during initialization"
-                )
+                logger.info(f"Job {self._config.job_id} responded during initialization")
                 return
 
             if deadline is not None and time.monotonic() > deadline:
@@ -185,18 +161,12 @@ class RolloutRunner(Generic[TaskSpec_contra]):
                 job_id=self._config.job_id, batch_index=job_status.filled_batches
             )
         except NotFoundError:
-            logger.info(
-                f"No batch found for job {self._config.job_id} "
-                f"at index {job_status.filled_batches}."
-            )
-            self._jobs_api.batches.create(
-                job_id=self._config.job_id, index=job_status.filled_batches
-            )
+            logger.info(f"No batch found for job {self._config.job_id} at index {job_status.filled_batches}.")
+            self._jobs_api.batches.create(job_id=self._config.job_id, index=job_status.filled_batches)
             return job_status.filled_batches, 0
         assert isinstance(current_batch.sample_count, int)
         logger.info(
-            f"Starting batch index {current_batch.index}: "
-            f"{current_batch.sample_count}/{self._config.batch_size}"
+            f"Starting batch index {current_batch.index}: {current_batch.sample_count}/{self._config.batch_size}"
         )
         return job_status.filled_batches, current_batch.sample_count
 
@@ -207,28 +177,19 @@ class RolloutRunner(Generic[TaskSpec_contra]):
         assert self._scheduler.inference_version is not None
         tasks = [
             Task(spec=t, starting_inference_version=self._scheduler.inference_version)
-            for t in self._dataset.sample(
-                n_rollouts // self._config.num_samples_per_task
-            )
+            for t in self._dataset.sample(n_rollouts // self._config.num_samples_per_task)
         ]
         for task in tasks:
-            logger.debug(
-                f"Spawning task {task.id} with inference version "
-                f"{task.starting_inference_version}"
-            )
+            logger.debug(f"Spawning task {task.id} with inference version {task.starting_inference_version}")
             self._dispatcher_queue.put(task)
         self._scheduler.add_tasks(tasks=tasks)
 
-    def _process_rollout_result(
-        self, task: Task[TaskSpec_contra], sample_group: SampleGroup
-    ) -> None:
+    def _process_rollout_result(self, task: Task[TaskSpec_contra], sample_group: SampleGroup) -> None:
         if sample_group.is_rejected:
             self._scheduler.remove_task(task_id=task.id)
             return
         for sample in sample_group.samples:
-            sample.debug_info["starting_inference_version"] = (
-                task.starting_inference_version
-            )
+            sample.debug_info["starting_inference_version"] = task.starting_inference_version
         self._scheduler.add_sample_group(task_id=task.id, samples=sample_group.samples)
 
     def _submit_samples(self) -> None:
@@ -253,9 +214,7 @@ class RolloutRunner(Generic[TaskSpec_contra]):
             if self._batch_n_samples == self._config.batch_size:
                 self._batch_idx += 1
                 self._batch_n_samples = 0
-                self._jobs_api.batches.create(
-                    job_id=self._config.job_id, index=self._batch_idx
-                )
+                self._jobs_api.batches.create(job_id=self._config.job_id, index=self._batch_idx)
 
 
 class JobStatusTracker(threading.Thread):
@@ -287,9 +246,7 @@ class JobStatusTracker(threading.Thread):
                 self._stop_event.wait(timeout=self._poll_interval)
                 continue
             if job_status.inference_version is not None:
-                self._output_queue.put(
-                    JobStatusUpdate(inference_version=job_status.inference_version)
-                )
+                self._output_queue.put(JobStatusUpdate(inference_version=job_status.inference_version))
             self._stop_event.wait(timeout=self._poll_interval)
 
     def stop(self):
@@ -318,9 +275,7 @@ class RolloutDispatcher(threading.Thread, Generic[TaskSpec_contra]):
         self._output_queue = output_queue
         self._stop_event = threading.Event()
         self._concurrent_workers = concurrent_workers
-        self._executor = concurrent.futures.ThreadPoolExecutor(
-            max_workers=concurrent_workers
-        )
+        self._executor = concurrent.futures.ThreadPoolExecutor(max_workers=concurrent_workers)
         self._num_rollout_retries = num_rollout_retries
         self._raise_on_rollout_failure = raise_on_rollout_failure
 
@@ -329,13 +284,9 @@ class RolloutDispatcher(threading.Thread, Generic[TaskSpec_contra]):
             while not self._stop_event.is_set():
                 try:
                     task = self._input_queue.get(timeout=DEFAULT_QUEUE_GET_TIMEOUT)
-                    future = self._executor.submit(
-                        self._rollout_fn, task=task.spec, context=self._context
-                    )
-                    future.add_done_callback(
-                        partial(self._handle_result, task=task, attempt=1)
-                    )
-                except queue.Empty:
+                    future = self._executor.submit(self._rollout_fn, task=task.spec, context=self._context)
+                    future.add_done_callback(partial(self._handle_result, task=task, attempt=1))
+                except queue.Empty:  # noqa: PERF203
                     continue
         finally:
             self._executor.shutdown(wait=False, cancel_futures=True)
@@ -351,33 +302,17 @@ class RolloutDispatcher(threading.Thread, Generic[TaskSpec_contra]):
             self._output_queue.put(RolloutResult(task=task, sample_group=result))
         except Exception as e:
             if attempt <= self._num_rollout_retries and not self._stop_event.is_set():
-                logger.info(
-                    "Rollout failed "
-                    f"(attempt {attempt}/{self._num_rollout_retries + 1}), "
-                    f"retrying: {e}"
-                )
-                new_future = self._executor.submit(
-                    self._rollout_fn, task=task.spec, context=self._context
-                )
-                new_future.add_done_callback(
-                    partial(self._handle_result, task=task, attempt=attempt + 1)
-                )
+                logger.info(f"Rollout failed (attempt {attempt}/{self._num_rollout_retries + 1}), retrying: {e}")
+                new_future = self._executor.submit(self._rollout_fn, task=task.spec, context=self._context)
+                new_future.add_done_callback(partial(self._handle_result, task=task, attempt=attempt + 1))
             else:
                 logger.exception(f"Rollout failed after {attempt} attempts")
                 if self._raise_on_rollout_failure:
-                    logger.warning(
-                        f"Raising exception to main thread due to rollout failure: {e}"
-                    )
-                    self._output_queue.put(
-                        RolloutException(exception=e, traceback=traceback.format_exc())
-                    )
+                    logger.warning(f"Raising exception to main thread due to rollout failure: {e}")
+                    self._output_queue.put(RolloutException(exception=e, traceback=traceback.format_exc()))
                 else:
                     logger.warning(f"Marking rollout as rejected due to failure: {e}")
-                    self._output_queue.put(
-                        RolloutResult(
-                            task=task, sample_group=SampleGroup(is_rejected=True)
-                        )
-                    )
+                    self._output_queue.put(RolloutResult(task=task, sample_group=SampleGroup(is_rejected=True)))
 
     def stop(self):
         self._stop_event.set()

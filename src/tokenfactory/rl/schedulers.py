@@ -51,7 +51,7 @@ class WithID(Protocol[TaskID]):
 Sample = TypeVar("Sample")
 
 
-class BaseRolloutScheduler(Generic[TaskID, Sample], ABC):
+class BaseRolloutScheduler(Generic[TaskID, Sample], ABC):  # noqa: PYI059
     """Rollout scheduler is responsible for deciding how many new rollouts it is
     possible to spawn at each moment, and for returning completed samples in
     such an order that doesn't break constraints of a scheduler.
@@ -113,10 +113,7 @@ class BaseRolloutScheduler(Generic[TaskID, Sample], ABC):
 
     @property
     def is_spawning_finished(self) -> bool:
-        return (
-            self._total_remaining_rollouts is not None
-            and self._total_remaining_rollouts == 0
-        )
+        return self._total_remaining_rollouts is not None and self._total_remaining_rollouts == 0
 
     @property
     def is_all_finished(self) -> bool:
@@ -134,9 +131,7 @@ class BaseRolloutScheduler(Generic[TaskID, Sample], ABC):
     def current_batch_index(self) -> int | None:
         return self._batch_index
 
-    def set_initial_batch_index(
-        self, batch_index: int, n_samples: int | None = None
-    ) -> None:
+    def set_initial_batch_index(self, batch_index: int, n_samples: int | None = None) -> None:
         if self._batch_index is None:
             self._batch_index = batch_index
             self._initial_batch_index = batch_index
@@ -148,13 +143,8 @@ class BaseRolloutScheduler(Generic[TaskID, Sample], ABC):
             raise RuntimeError("Batch index can be set only once")
 
     def set_inference_version(self, inference_version: int) -> None:
-        if (
-            self._inference_version is not None
-            and self._inference_version > inference_version
-        ):
-            raise RuntimeError(
-                "New inference version must be greater or equal the current one"
-            )
+        if self._inference_version is not None and self._inference_version > inference_version:
+            raise RuntimeError("New inference version must be greater or equal the current one")
         self._inference_version = inference_version
 
     def get_num_rollouts_to_spawn(self) -> int:
@@ -167,17 +157,13 @@ class BaseRolloutScheduler(Generic[TaskID, Sample], ABC):
     def add_tasks(self, tasks: Iterable[WithID[TaskID]]) -> None:
         if self._inference_version is None:
             raise RuntimeError("Inference version must be set before adding tasks")
-        self._tasks_by_inference_version[self._inference_version].update(
-            [task.id for task in tasks]
-        )
+        self._tasks_by_inference_version[self._inference_version].update([task.id for task in tasks])
         for task in tasks:
             self._task_to_inference_version[task.id] = self._inference_version
             self._total_spawned_tasks += 1
             remaining = self._total_remaining_rollouts
             if remaining is not None and remaining < 0:
-                raise RuntimeError(
-                    "Added more tasks than allowed by num_batches and batch_size"
-                )
+                raise RuntimeError("Added more tasks than allowed by num_batches and batch_size")
 
     def remove_task(self, task_id: TaskID) -> None:
         ver = self._task_to_inference_version.pop(task_id)  # type: ignore[reportArgumentType]
@@ -196,28 +182,20 @@ class BaseRolloutScheduler(Generic[TaskID, Sample], ABC):
 
     @property
     def _task_num_in_progress(self) -> int:
-        return sum([len(tasks) for tasks in self._tasks_by_inference_version.values()])
+        return sum(len(tasks) for tasks in self._tasks_by_inference_version.values())
 
     @property
     def _total_remaining_rollouts(self) -> int | None:
-        if (
-            self._config.num_batches is not None
-            and self._initial_batch_index is not None
-        ):
+        if self._config.num_batches is not None and self._initial_batch_index is not None:
             return (
-                (self._config.num_batches - self._initial_batch_index)
-                * self._config.batch_size
-                - self._total_spawned_tasks * self._config.num_samples_per_task
-            )
+                self._config.num_batches - self._initial_batch_index
+            ) * self._config.batch_size - self._total_spawned_tasks * self._config.num_samples_per_task
         return None
 
     def _add_ready_sample_group(self, sample_group: Sequence[Sample]):
         assert len(sample_group) == self._config.num_samples_per_task
 
-        if (
-            self._config.num_batches is not None
-            and self._batch_index == self._config.num_batches
-        ):
+        if self._config.num_batches is not None and self._batch_index == self._config.num_batches:
             raise RuntimeError("Cannot add more samples, all batches are processed")
 
         self._ready_samples.extend(sample_group)
@@ -228,9 +206,7 @@ class BaseRolloutScheduler(Generic[TaskID, Sample], ABC):
             self._batch_remainder = self._config.batch_size
 
 
-class AnyStalenessRolloutScheduler(
-    BaseRolloutScheduler[TaskID, Sample], Generic[TaskID, Sample]
-):
+class AnyStalenessRolloutScheduler(BaseRolloutScheduler[TaskID, Sample], Generic[TaskID, Sample]):
     """Scheduler without staleness checks: all samples go to batch in order
     of appearance. Always spawns the maximum number of trajectories
     that allows `parallel_rollouts`.
@@ -241,15 +217,10 @@ class AnyStalenessRolloutScheduler(
         self.remove_task(task_id=task_id)
 
     def _get_num_rollouts_to_spawn(self) -> int:
-        return (
-            self._config.parallel_rollouts
-            - self._task_num_in_progress * self._config.num_samples_per_task
-        )
+        return self._config.parallel_rollouts - self._task_num_in_progress * self._config.num_samples_per_task
 
 
-class DropStaleRolloutScheduler(
-    BaseRolloutScheduler[TaskID, Sample], Generic[TaskID, Sample]
-):
+class DropStaleRolloutScheduler(BaseRolloutScheduler[TaskID, Sample], Generic[TaskID, Sample]):
     """Spawns the maximum number of trajectories that allows `parallel_rollouts`
     and drops samples that exceed `allowed_staleness`.
     """
@@ -257,43 +228,31 @@ class DropStaleRolloutScheduler(
     def _consume_sample_group(self, task_id: TaskID, sample_group: Sequence[Sample]):
         assert isinstance(self._batch_index, int)
         assert self._config.allowed_staleness is not None
-        if (
-            self._batch_index - 1 - self._task_to_inference_version[task_id]
-            <= self._config.allowed_staleness
-        ):
+        if self._batch_index - 1 - self._task_to_inference_version[task_id] <= self._config.allowed_staleness:
             self._add_ready_sample_group(sample_group=sample_group)
         else:
             logger.info(f"Dropping sample group for task {task_id} due to staleness")
         self.remove_task(task_id=task_id)
 
     def _get_num_rollouts_to_spawn(self) -> int:
-        return (
-            self._config.parallel_rollouts
-            - self._task_num_in_progress * self._config.num_samples_per_task
-        )
+        return self._config.parallel_rollouts - self._task_num_in_progress * self._config.num_samples_per_task
 
 
-class DroplessRolloutScheduler(
-    BaseRolloutScheduler[TaskID, Sample], Generic[TaskID, Sample]
-):
+class DroplessRolloutScheduler(BaseRolloutScheduler[TaskID, Sample], Generic[TaskID, Sample]):
     """Never drops samples. Waits for stragglers when they are about to exceed
     `allowed_staleness` and buffers samples that arrive during that time.
     """
 
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
-        self._pending_sample_groups: list[
-            tuple[int, int, TaskID, Sequence[Sample]]
-        ] = []
+        self._pending_sample_groups: list[tuple[int, int, TaskID, Sequence[Sample]]] = []
 
     def _consume_sample_group(self, task_id: TaskID, sample_group: Sequence[Sample]):
         added = self._process_sample_group(task_id=task_id, sample_group=sample_group)
         self.remove_task(task_id=task_id)
         if added:
             while len(self._pending_sample_groups):
-                _, _, pending_task_id, pending_sample_group = (
-                    self._pending_sample_groups[0]
-                )
+                _, _, pending_task_id, pending_sample_group = self._pending_sample_groups[0]
                 added = self._process_sample_group(
                     task_id=pending_task_id,
                     sample_group=pending_sample_group,
@@ -330,9 +289,7 @@ class DroplessRolloutScheduler(
         )
         return res
 
-    def _process_sample_group(
-        self, task_id: TaskID, sample_group: Sequence[Sample], is_pending: bool = False
-    ) -> bool:
+    def _process_sample_group(self, task_id: TaskID, sample_group: Sequence[Sample], is_pending: bool = False) -> bool:
         """For the current batch, we calculate the number of reserved places
         for samples from trajectories started in different inference versions.
         """
@@ -355,16 +312,13 @@ class DroplessRolloutScheduler(
                         break
                     cnt += task_num
                 if ver in self._tasks_by_inference_version:
-                    reserved_places.appendleft(
-                        (
-                            ver,
-                            len(self._tasks_by_inference_version[ver])
-                            * self._config.num_samples_per_task,
-                        )
-                    )
+                    reserved_places.appendleft((
+                        ver,
+                        len(self._tasks_by_inference_version[ver]) * self._config.num_samples_per_task,
+                    ))
 
         allowed_versions = {x[0] for x in reserved_places}
-        reserved_places_num = sum([x[1] for x in reserved_places])
+        reserved_places_num = sum(x[1] for x in reserved_places)
 
         if (
             reserved_places_num < self._batch_remainder

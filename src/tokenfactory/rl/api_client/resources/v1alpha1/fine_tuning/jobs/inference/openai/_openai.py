@@ -5,7 +5,7 @@ from functools import cached_property
 from tokenfactory.rl.api_client.resources.v1alpha1.fine_tuning.jobs._base import (
     BaseJobIDResource,
 )
-from tokenfactory.rl.api_client.resources.v1alpha1.fine_tuning.jobs.inference.openai.v1 import (  # noqa: E501
+from tokenfactory.rl.api_client.resources.v1alpha1.fine_tuning.jobs.inference.openai.v1 import (
     V1,
 )
 

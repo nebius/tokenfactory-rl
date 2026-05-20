@@ -11,7 +11,7 @@ repos:
       - id: mixed-line-ending
       - id: check-added-large-files
   - repo: https://github.com/astral-sh/ruff-pre-commit
-    rev: v0.14.9
+    rev: v0.15.13
     hooks:
       - id: ruff
         name: ruff check
@@ -19,18 +19,9 @@ repos:
       - id: ruff-format
         name: ruff format
   - repo: https://github.com/astral-sh/uv-pre-commit
-    rev: 0.9.26
+    rev: 0.11.15
     hooks:
       - id: uv-lock
-
-  - repo: https://github.com/gitleaks/gitleaks
-    rev: v8.24.2
-    hooks:
-      - id: gitleaks
-  - repo: https://github.com/semgrep/pre-commit
-    rev: 'v1.150.0'
-    hooks:
-      - id: semgrep
   - repo: local
     hooks:
       - id: ty
@@ -39,3 +30,12 @@ repos:
         language: system
         pass_filenames: false
         files: (?x)^(.*\.py|(?:.*/)?pyproject\.toml)$
+  # security
+  - repo: https://github.com/gitleaks/gitleaks
+    rev: v8.24.2
+    hooks:
+      - id: gitleaks
+  - repo: https://github.com/semgrep/pre-commit
+    rev: 'v1.150.0'
+    hooks:
+      - id: semgrep

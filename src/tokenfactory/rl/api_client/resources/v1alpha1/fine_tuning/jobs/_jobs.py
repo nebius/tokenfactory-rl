@@ -6,10 +6,10 @@ from tokenfactory.rl.api_client.models import JobStatus
 from tokenfactory.rl.api_client.resources.v1alpha1.fine_tuning.jobs._base import (
     BaseJobIDResource,
 )
-from tokenfactory.rl.api_client.resources.v1alpha1.fine_tuning.jobs._batches import (  # noqa: E501
+from tokenfactory.rl.api_client.resources.v1alpha1.fine_tuning.jobs._batches import (
     Batches,
 )
-from tokenfactory.rl.api_client.resources.v1alpha1.fine_tuning.jobs.inference import (  # noqa: E501
+from tokenfactory.rl.api_client.resources.v1alpha1.fine_tuning.jobs.inference import (
     Inference,
 )
 
