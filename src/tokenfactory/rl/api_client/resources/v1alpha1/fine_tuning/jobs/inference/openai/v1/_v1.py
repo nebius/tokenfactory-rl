@@ -3,15 +3,9 @@ from __future__ import annotations
 from functools import cached_property
 from typing import Any
 
-from tokenfactory.rl.api_client.resources.v1alpha1.fine_tuning.jobs._base import (
-    BaseJobIDResource,
-)
-from tokenfactory.rl.api_client.resources.v1alpha1.fine_tuning.jobs.inference.openai.v1.chat import (
-    Chat,
-)
-from tokenfactory.rl.api_client.resources.v1alpha1.fine_tuning.jobs.inference.openai.v1.completions import (
-    Completions,
-)
+from tokenfactory.rl.api_client.resources.v1alpha1.fine_tuning.jobs._base import BaseJobIDResource
+from tokenfactory.rl.api_client.resources.v1alpha1.fine_tuning.jobs.inference.openai.v1.chat import Chat
+from tokenfactory.rl.api_client.resources.v1alpha1.fine_tuning.jobs.inference.openai.v1.completions import Completions
 
 
 class V1(BaseJobIDResource):

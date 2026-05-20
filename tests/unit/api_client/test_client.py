@@ -2,20 +2,8 @@ import json
 
 import pytest
 from pytest_httpx import HTTPXMock
-
-from tokenfactory.rl.api_client import (
-    MissingAPIKeyError,
-    NotFoundError,
-    TokenFactory,
-)
-from tokenfactory.rl.api_client.models import (
-    Batch,
-    BatchStatus,
-    ChatCompletion,
-    Completion,
-    JobStatus,
-    Sample,
-)
+from tokenfactory.rl.api_client import MissingAPIKeyError, NotFoundError, TokenFactory
+from tokenfactory.rl.api_client.models import Batch, BatchStatus, ChatCompletion, Completion, JobStatus, Sample
 
 
 BASE_URL = "http://test-server"
@@ -34,9 +22,7 @@ def test_constructor_api_key_is_used_without_env(monkeypatch: pytest.MonkeyPatch
     assert client.api_key == "constructor-key"
 
 
-def test_constructor_api_key_overrides_env(
-    monkeypatch: pytest.MonkeyPatch, httpx_mock: HTTPXMock
-):
+def test_constructor_api_key_overrides_env(monkeypatch: pytest.MonkeyPatch, httpx_mock: HTTPXMock):
     monkeypatch.setenv("TOKENFACTORY_API_KEY", "env-key")
     client = TokenFactory(BASE_URL, api_key="constructor-key")
     httpx_mock.add_response(
@@ -68,14 +54,8 @@ def test_missing_api_key_raises_when_constructor_and_env_are_missing(
 
 def test_resource_hierarchy(client: TokenFactory):
     jobs = client.v1alpha1.fine_tuning.jobs
-    assert (
-        jobs.endpoint(job_id="job-123")
-        == f"{BASE_URL}/v1alpha1/fine_tuning/jobs/job-123"
-    )
-    assert (
-        jobs.batches.endpoint(job_id="job-123")
-        == f"{BASE_URL}/v1alpha1/fine_tuning/jobs/job-123/batches"
-    )
+    assert jobs.endpoint(job_id="job-123") == f"{BASE_URL}/v1alpha1/fine_tuning/jobs/job-123"
+    assert jobs.batches.endpoint(job_id="job-123") == f"{BASE_URL}/v1alpha1/fine_tuning/jobs/job-123/batches"
 
 
 def test_get_runtime_status(client: TokenFactory, httpx_mock: HTTPXMock):
@@ -133,9 +113,7 @@ def test_batches_get(client: TokenFactory, httpx_mock: HTTPXMock):
         },
     )
 
-    batch = client.v1alpha1.fine_tuning.jobs.batches.get(
-        job_id="job-123", batch_index=2
-    )
+    batch = client.v1alpha1.fine_tuning.jobs.batches.get(job_id="job-123", batch_index=2)
 
     assert isinstance(batch, Batch)
     assert batch.index == 2
@@ -166,9 +144,7 @@ def test_batches_submit_samples(client: TokenFactory, httpx_mock: HTTPXMock):
         debug_info={"info": "data"},
     )
 
-    batch = client.v1alpha1.fine_tuning.jobs.batches.submit_samples(
-        job_id="job-123", batch_index=0, samples=[sample]
-    )
+    batch = client.v1alpha1.fine_tuning.jobs.batches.submit_samples(job_id="job-123", batch_index=0, samples=[sample])
 
     assert isinstance(batch, Batch)
     assert batch.sample_count == 1
@@ -234,17 +210,12 @@ def test_context_manager():
 
 def test_inference_resource_hierarchy(client: TokenFactory):
     inference = client.v1alpha1.fine_tuning.jobs.inference
+    assert inference.endpoint(job_id="job-123") == f"{BASE_URL}/v1alpha1/fine_tuning/jobs/job-123/inference"
     assert (
-        inference.endpoint(job_id="job-123")
-        == f"{BASE_URL}/v1alpha1/fine_tuning/jobs/job-123/inference"
+        inference.openai.endpoint(job_id="job-123") == f"{BASE_URL}/v1alpha1/fine_tuning/jobs/job-123/inference/openai"
     )
     assert (
-        inference.openai.endpoint(job_id="job-123")
-        == f"{BASE_URL}/v1alpha1/fine_tuning/jobs/job-123/inference/openai"
-    )
-    assert (
-        inference.openai.v1.endpoint("job-123")
-        == f"{BASE_URL}/v1alpha1/fine_tuning/jobs/job-123/inference/openai/v1"
+        inference.openai.v1.endpoint("job-123") == f"{BASE_URL}/v1alpha1/fine_tuning/jobs/job-123/inference/openai/v1"
     )
     assert (
         inference.openai.v1.chat.endpoint(job_id="job-123")
@@ -284,12 +255,10 @@ def test_chat_completions_create(client: TokenFactory, httpx_mock: HTTPXMock):
         },
     )
 
-    result = (
-        client.v1alpha1.fine_tuning.jobs.inference.openai.v1.chat.completions.create(
-            job_id="job-123",
-            model="test-model",
-            messages=[{"role": "user", "content": "Hi"}],
-        )
+    result = client.v1alpha1.fine_tuning.jobs.inference.openai.v1.chat.completions.create(
+        job_id="job-123",
+        model="test-model",
+        messages=[{"role": "user", "content": "Hi"}],
     )
 
     assert isinstance(result, ChatCompletion)
@@ -354,9 +323,7 @@ def test_models_get(client: TokenFactory, httpx_mock: HTTPXMock):
         },
     )
 
-    result = client.v1alpha1.fine_tuning.jobs.inference.openai.v1.models(
-        job_id="job-123"
-    )
+    result = client.v1alpha1.fine_tuning.jobs.inference.openai.v1.models(job_id="job-123")
 
     assert isinstance(result, dict)
     assert result["object"] == "list"

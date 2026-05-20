@@ -5,6 +5,7 @@ from uuid import uuid4
 
 from typing_extensions import Self
 
+
 TaskSpec = TypeVar("TaskSpec")
 
 

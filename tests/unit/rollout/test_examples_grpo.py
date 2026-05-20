@@ -2,14 +2,11 @@ from types import SimpleNamespace
 from unittest.mock import MagicMock, call
 
 import pytest
-
 from tokenfactory.rl.examples.grpo import MyConfig, Task, roll_out_task
 
 
 def _make_completion(content: str) -> SimpleNamespace:
-    return SimpleNamespace(
-        choices=[SimpleNamespace(message=SimpleNamespace(content=content))]
-    )
+    return SimpleNamespace(choices=[SimpleNamespace(message=SimpleNamespace(content=content))])
 
 
 def test_roll_out_task_returns_normalized_rewards_for_all_samples(monkeypatch):
@@ -27,15 +24,11 @@ def test_roll_out_task_returns_normalized_rewards_for_all_samples(monkeypatch):
             ([5, 6], [0.0, -0.3], [0, 1]),
         ]
     )
-    monkeypatch.setattr(
-        "tokenfactory.rl.examples.grpo.parse_completion", parse_completion
-    )
+    monkeypatch.setattr("tokenfactory.rl.examples.grpo.parse_completion", parse_completion)
 
     context = SimpleNamespace(
         config=SimpleNamespace(model_name="test-model", num_samples_per_task=3),
-        openai_client=SimpleNamespace(
-            chat=SimpleNamespace(completions=SimpleNamespace(create=completion_create))
-        ),
+        openai_client=SimpleNamespace(chat=SimpleNamespace(completions=SimpleNamespace(create=completion_create))),
     )
 
     result = roll_out_task(
@@ -57,9 +50,11 @@ def test_roll_out_task_returns_normalized_rewards_for_all_samples(monkeypatch):
         {"reward": 0.5},
         {"reward": 0.0},
     ]
-    assert [sample.normalized_reward for sample in result.samples] == pytest.approx(
-        [1.224741871398925, 0.0, -1.224741871398925]
-    )
+    assert [sample.normalized_reward for sample in result.samples] == pytest.approx([
+        1.224741871398925,
+        0.0,
+        -1.224741871398925,
+    ])
     assert completion_create.call_count == 3
     completion_create.assert_has_calls(
         [

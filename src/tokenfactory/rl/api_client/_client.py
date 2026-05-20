@@ -2,13 +2,10 @@ from __future__ import annotations
 
 import os
 from functools import cached_property
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
 import httpx
 from tenacity import retry, retry_if_exception, stop_after_attempt, wait_exponential
-from tenacity.wait import wait_base
-from typing_extensions import Self
-
 from tokenfactory.rl.api_client._exceptions import (
     BadRequestError,
     InformationalResponseError,
@@ -19,6 +16,11 @@ from tokenfactory.rl.api_client._exceptions import (
     RedirectResponseError,
 )
 from tokenfactory.rl.api_client.resources.v1alpha1 import V1Alpha1
+
+
+if TYPE_CHECKING:
+    from tenacity.wait import wait_base
+    from typing_extensions import Self
 
 
 ENV_PREFIX = "TOKENFACTORY_"
@@ -99,7 +101,7 @@ class TokenFactory:
     def __enter__(self) -> Self:
         return self
 
-    def __exit__(self, *args) -> None:
+    def __exit__(self, *args) -> None:  # noqa: ANN002
         self.close()
 
     def _build_headers(self) -> dict[str, str]:

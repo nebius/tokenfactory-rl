@@ -23,11 +23,7 @@ from tokenfactory.rl.rollout.models import (
     Task,
     TaskID,
 )
-from tokenfactory.rl.schedulers import (
-    BaseRolloutScheduler,
-    RolloutSchedulerConfig,
-    create_rollout_scheduler,
-)
+from tokenfactory.rl.schedulers import BaseRolloutScheduler, RolloutSchedulerConfig, create_rollout_scheduler
 
 
 DEFAULT_QUEUE_GET_TIMEOUT = 0.1

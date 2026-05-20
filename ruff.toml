@@ -23,6 +23,7 @@ extend-safe-fixes = [
     "UP035",   # deprecated-import
     "UP038",   # non-pep604-isinstance
     "PLR6104", # non-augmented-assignment
+    "TC002",
 ]
 extend-unsafe-fixes = [
     "PGH003", # blanket-type-ignore
@@ -44,7 +45,7 @@ select = [
     "EXE",   # flake8-executable
     "F",     # Pyflakes
     "FA",    # flake8-future-annotations
-#    "I",     # isort
+    "I",     # isort
     "LOG",   # flake8-logging
     "N",     # pep8-naming
     "PERF",  # Perflint
@@ -70,29 +71,33 @@ select = [
 ]
 
 extend-ignore = [
-    "ANN002", # missing-type-args
     "ANN003", # missing-type-kwargs
-    "ANN202", # missing-return-type-private-function
-    "ANN204", # missing-return-type-special-method
-    "ANN401", # any-type
-    "COM812", # missing-trailing-comma
-    "E203",   # whitespace-before-punctuation
-    "E741",   # ambiguous-variable-name
-    "PIE790", # unnecessary-placeholder
-    "RUF012", # mutable-class-default
-    "RUF013", # implicit-optional
-    "S311",   # suspicious-non-cryptographic-random-usage
-    "S604",   # hardcoded-password-func-arg
     "TRY003", # raise-vanilla-args
     "D203",   # incorrect-blank-line-before-class
     "D213",   # multi-line-summary-second-line
-    "B903",   # class-as-data-structure
     "D205",
-    "DOC201",
     "S101",  # assert
+    "COM812",   # missing-trailing-comma
+    "D100",     # undocumented-public-module
+    "D101",     # undocumented-public-class
+    "D102",     # undocumented-public-method
+    "D103",     # undocumented-public-function
+    "D104",     # undocumented-public-package
+    "D107",     # undocumented-public-init
+    "PLC0415",  # import-outside-top-level
+    "TC006",
 ]
 
 [lint.per-file-ignores]
+
+
+"*" = [
+]
+
+"src/tokenfactory/rl/api_client/models.py" = [
+    "ERA001",
+    "N815",
+]
 
 "tests/**" = [
     "PLR",
@@ -101,59 +106,22 @@ extend-ignore = [
     "RUF069",
 ]
 
-"src/tokenfactory/rl/api_client/models.py" = [
-    "ERA001",
-    "N815",
-]
-
-"*" = [
-
-
-    "ASYNC109", # async-function-with-timeout
-    "COM812",   # missing-trailing-comma
-    "D100",     # undocumented-public-module
-    "D101",     # undocumented-public-class
-    "D102",     # undocumented-public-method
-    "D103",     # undocumented-public-function
-    "D104",     # undocumented-public-package
-    "D105",     # undocumented-magic-method
-    "D106",     # undocumented-public-nested-class
-    "D107",     # undocumented-public-init
-    "N813",     # camelcase-imported-as-lowercase
-    "PLC0415",  # import-outside-top-level
-    "PLW1510",  # unspecified-encoding
-    "PLW2901",  # redefined-loop-name
-    "PT019",    # pytest-fixture-param-without-value
-    "PTH118",   # os-path-join
-    "PYI019",   # custom-type-var-for-self
-    "PYI051",   # redundant-literal-union
-    "RUF005",   # collection-literal-concatenation
-    "S404",     # suspicious-subprocess-import
-    "TC",       # typing-only-*-import
-    "PLW1514",
-]
-
-#"tests/**" = [
-#    "PERF",    # perflint
-#    "PLR2004", # magic-value-comparison
-#    "PT011",   # pytest-raises-too-broad
-#    "PT028",   # pytest-parameter-with-default-argument
-#    "RUF029",  # unused-async
-#    "S105",    # hardcoded-password-string
-#]
-
 "tests/**/test_*.py" = [
     "ANN",      # flake8-annotations-ann
-#    "ASYNC110", # async-busy-wait
-#    "PLC1901",  # compare-to-empty-string
     "RUF059",   # unused-unpacked-variable
-#    "S101",     # assert
+    "S101",     # assert
     "S106",     # hardcoded-password-func-arg
 ]
+
 
 "!tests/**" = [
     "PLC2701", # import-private-name
 ]
+
+"src/tokenfactory/rl/examples/**" = [
+    "S311",   # suspicious-non-cryptographic-random-usage
+]
+
 "!src/tokenfactory/rl/examples/**" = [
     "PLC2701", # import-private-name
 ]

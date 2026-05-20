@@ -2,7 +2,6 @@ from typing import Any, cast
 
 import pytest
 from pydantic import ValidationError
-
 from tokenfactory.rl.rollout.config import RolloutConfig
 
 
@@ -58,15 +57,13 @@ class TestRolloutConfig:
 
     def test_executor_type_rejects_invalid(self):
         with pytest.raises(ValidationError):
-            RolloutConfig.model_validate(
-                {
-                    "job_id": "j1",
-                    "model_name": "m1",
-                    "batch_size": 64,
-                    "num_samples_per_task": 4,
-                    "executor_type": "invalid",
-                }
-            )
+            RolloutConfig.model_validate({
+                "job_id": "j1",
+                "model_name": "m1",
+                "batch_size": 64,
+                "num_samples_per_task": 4,
+                "executor_type": "invalid",
+            })
 
     def test_env_prefix(self, monkeypatch):
         monkeypatch.setenv("TOKENFACTORY_ROLLOUT_JOB_ID", "env-job")

@@ -4,7 +4,6 @@ from functools import partial
 from random import choices
 
 from pydantic_settings import BaseSettings
-
 from tokenfactory.rl.api_client import TokenFactory
 from tokenfactory.rl.rollout import RolloutConfig, RolloutContext, RolloutRunner
 from tokenfactory.rl.rollout.models import Sample, SampleGroup
@@ -41,9 +40,7 @@ def reward_fn(response: str, answer: str) -> float:
     return 0.0
 
 
-def roll_out_task(
-    task: Task, context: RolloutContext, my_config: MyConfig
-) -> SampleGroup:
+def roll_out_task(task: Task, context: RolloutContext, my_config: MyConfig) -> SampleGroup:
     messages = [
         {"role": "system", "content": my_config.system_prompt},
         {"role": "user", "content": task.question},
@@ -57,9 +54,7 @@ def roll_out_task(
     token_ids, logprobs, mask = parse_completion(completion)
 
     assert completion.choices[0].message.content is not None
-    reward = reward_fn(
-        response=completion.choices[0].message.content, answer=task.answer
-    )
+    reward = reward_fn(response=completion.choices[0].message.content, answer=task.answer)
 
     sample = Sample(
         token_ids=token_ids,

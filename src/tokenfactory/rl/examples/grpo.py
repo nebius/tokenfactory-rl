@@ -5,7 +5,6 @@ from random import choices
 from statistics import mean, pstdev
 
 from pydantic_settings import BaseSettings
-
 from tokenfactory.rl.api_client import TokenFactory
 from tokenfactory.rl.rollout import RolloutConfig, RolloutContext, RolloutRunner
 from tokenfactory.rl.rollout.models import Sample, SampleGroup
@@ -42,9 +41,7 @@ def reward_fn(response: str, answer: str) -> float:
     return 0.0
 
 
-def roll_out_task(
-    task: Task, context: RolloutContext, my_config: MyConfig
-) -> SampleGroup:
+def roll_out_task(task: Task, context: RolloutContext, my_config: MyConfig) -> SampleGroup:
     messages = [
         {"role": "system", "content": my_config.system_prompt},
         {"role": "user", "content": task.question},
@@ -60,9 +57,7 @@ def roll_out_task(
         token_ids, logprobs, mask = parse_completion(completion)
 
         assert completion.choices[0].message.content is not None
-        reward = reward_fn(
-            response=completion.choices[0].message.content, answer=task.answer
-        )
+        reward = reward_fn(response=completion.choices[0].message.content, answer=task.answer)
 
         samples.append(
             Sample(
@@ -78,9 +73,7 @@ def roll_out_task(
     reward_mean = mean(rewards)
     reward_stddev = pstdev(rewards)
     for s in samples:
-        s.normalized_reward = (s.normalized_reward - reward_mean) / (
-            reward_stddev + 1e-6
-        )
+        s.normalized_reward = (s.normalized_reward - reward_mean) / (reward_stddev + 1e-6)
 
     return SampleGroup(samples=samples)
 
