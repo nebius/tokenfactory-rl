@@ -2,6 +2,7 @@ from types import SimpleNamespace
 from unittest.mock import MagicMock, call
 
 import pytest
+
 from tokenfactory.rl.examples.grpo import MyConfig, Task, roll_out_task
 
 

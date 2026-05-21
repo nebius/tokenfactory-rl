@@ -7,6 +7,7 @@ from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
     from openai import AsyncOpenAI, OpenAI
+
     from tokenfactory.rl.api_client import TokenFactory
     from tokenfactory.rl.rollout.config import RolloutConfig
 

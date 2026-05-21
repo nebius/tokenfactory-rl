@@ -5,6 +5,7 @@ from random import choices
 from statistics import mean, pstdev
 
 from pydantic_settings import BaseSettings
+
 from tokenfactory.rl.api_client import TokenFactory
 from tokenfactory.rl.rollout import RolloutConfig, RolloutContext, RolloutRunner
 from tokenfactory.rl.rollout.models import Sample, SampleGroup

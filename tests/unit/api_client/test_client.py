@@ -2,6 +2,7 @@ import json
 
 import pytest
 from pytest_httpx import HTTPXMock
+
 from tokenfactory.rl.api_client import MissingAPIKeyError, NotFoundError, TokenFactory
 from tokenfactory.rl.api_client.models import Batch, BatchStatus, ChatCompletion, Completion, JobStatus, Sample
 

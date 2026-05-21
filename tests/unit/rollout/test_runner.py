@@ -5,6 +5,7 @@ from typing import Any, Literal
 from unittest.mock import MagicMock, call
 
 import pytest
+
 from tokenfactory.rl.api_client import NotFoundError
 from tokenfactory.rl.api_client.models import Batch, JobStatus
 from tokenfactory.rl.rollout import JobInitializationTimeout

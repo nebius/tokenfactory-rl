@@ -2,6 +2,7 @@ from typing import Literal
 from unittest.mock import MagicMock
 
 import pytest
+
 from tokenfactory.rl.rollout.config import RolloutConfig
 from tokenfactory.rl.rollout.context import RolloutContext
 

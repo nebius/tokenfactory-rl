@@ -2,6 +2,7 @@ from typing import Any, cast
 
 import pytest
 from pydantic import ValidationError
+
 from tokenfactory.rl.rollout.config import RolloutConfig
 
 

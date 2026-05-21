@@ -1,6 +1,7 @@
 from dataclasses import asdict
 
 import pytest
+
 from tokenfactory.rl.rollout.models import (
     BaseID,
     RolloutException,
