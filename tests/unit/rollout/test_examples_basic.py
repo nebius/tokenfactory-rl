@@ -5,23 +5,17 @@ from tokenfactory.rl.examples.basic import MyConfig, Task, roll_out_task
 
 
 def _make_completion(content: str) -> SimpleNamespace:
-    return SimpleNamespace(
-        choices=[SimpleNamespace(message=SimpleNamespace(content=content))]
-    )
+    return SimpleNamespace(choices=[SimpleNamespace(message=SimpleNamespace(content=content))])
 
 
 def test_roll_out_task_returns_single_sample(monkeypatch):
     completion_create = MagicMock(return_value=_make_completion("The answer is 42."))
     parse_completion = MagicMock(return_value=([1, 2], [0.0, -0.1], [0, 1]))
-    monkeypatch.setattr(
-        "tokenfactory.rl.examples.basic.parse_completion", parse_completion
-    )
+    monkeypatch.setattr("tokenfactory.rl.examples.basic.parse_completion", parse_completion)
 
     context = SimpleNamespace(
         config=SimpleNamespace(model_name="test-model", num_samples_per_task=1),
-        openai_client=SimpleNamespace(
-            chat=SimpleNamespace(completions=SimpleNamespace(create=completion_create))
-        ),
+        openai_client=SimpleNamespace(chat=SimpleNamespace(completions=SimpleNamespace(create=completion_create))),
     )
 
     result = roll_out_task(

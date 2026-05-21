@@ -23,9 +23,7 @@ class CreateBatchRequest(BaseModel):
 
 
 class JobStatus(BaseModel):
-    object: Literal["fine_tuning.job.status"] = Field(
-        "fine_tuning.job.status", title="Object"
-    )
+    object: Literal["fine_tuning.job.status"] = Field("fine_tuning.job.status", title="Object")
     inference_version: int | None = Field(..., title="Inference Version")
     total_batches: int | None = Field(..., title="Total Batches")
     filled_batches: int = Field(..., title="Filled Batches")
@@ -222,9 +220,7 @@ class ResponseFormatText(BaseModel):
 
 
 class Sample(BaseModel):
-    object: Literal["fine_tuning.rl_sample"] = Field(
-        "fine_tuning.rl_sample", title="Object"
-    )
+    object: Literal["fine_tuning.rl_sample"] = Field("fine_tuning.rl_sample", title="Object")
     id: str = Field(..., title="Id")
     token_ids: list[int] = Field(..., title="Token Ids")
     logprobs: list[float] = Field(..., title="Logprobs")
@@ -297,14 +293,10 @@ class CompletionTokensDetails(BaseModel):
     model_config = ConfigDict(
         extra="allow",
     )
-    accepted_prediction_tokens: int | None = Field(
-        None, title="Accepted Prediction Tokens"
-    )
+    accepted_prediction_tokens: int | None = Field(None, title="Accepted Prediction Tokens")
     audio_tokens: int | None = Field(None, title="Audio Tokens")
     reasoning_tokens: int | None = Field(None, title="Reasoning Tokens")
-    rejected_prediction_tokens: int | None = Field(
-        None, title="Rejected Prediction Tokens"
-    )
+    rejected_prediction_tokens: int | None = Field(None, title="Rejected Prediction Tokens")
 
 
 class FunctionCallModel(BaseModel):
@@ -523,9 +515,7 @@ class ChatCompletionDeveloperMessageParam(BaseModel):
     model_config = ConfigDict(
         extra="allow",
     )
-    content: str | list[ChatCompletionContentPartTextParam] = Field(
-        ..., title="Content"
-    )
+    content: str | list[ChatCompletionContentPartTextParam] = Field(..., title="Content")
     role: Literal["developer"] = Field(..., title="Role")
     name: str | None = Field(None, title="Name")
 
@@ -558,9 +548,7 @@ class ChatCompletionPredictionContentParam(BaseModel):
     model_config = ConfigDict(
         extra="allow",
     )
-    content: str | list[ChatCompletionContentPartTextParam] = Field(
-        ..., title="Content"
-    )
+    content: str | list[ChatCompletionContentPartTextParam] = Field(..., title="Content")
     type: Literal["content"] = Field(..., title="Type")
 
 
@@ -568,9 +556,7 @@ class ChatCompletionSystemMessageParam(BaseModel):
     model_config = ConfigDict(
         extra="allow",
     )
-    content: str | list[ChatCompletionContentPartTextParam] = Field(
-        ..., title="Content"
-    )
+    content: str | list[ChatCompletionContentPartTextParam] = Field(..., title="Content")
     role: Literal["system"] = Field(..., title="Role")
     name: str | None = Field(None, title="Name")
 
@@ -579,9 +565,7 @@ class ChatCompletionToolMessageParam(BaseModel):
     model_config = ConfigDict(
         extra="allow",
     )
-    content: str | list[ChatCompletionContentPartTextParam] = Field(
-        ..., title="Content"
-    )
+    content: str | list[ChatCompletionContentPartTextParam] = Field(..., title="Content")
     role: Literal["tool"] = Field(..., title="Role")
     tool_call_id: str = Field(..., title="Tool Call Id")
 
@@ -720,23 +704,15 @@ class ChatCompletionAssistantMessageParam(BaseModel):
     )
     role: Literal["assistant"] = Field(..., title="Role")
     audio: Audio | None = None
-    content: (
-        str
-        | list[
-            ChatCompletionContentPartTextParam | ChatCompletionContentPartRefusalParam
-        ]
-        | None
-    ) = Field(None, title="Content")
+    content: str | list[ChatCompletionContentPartTextParam | ChatCompletionContentPartRefusalParam] | None = Field(
+        None, title="Content"
+    )
     function_call: FunctionCallModel | None = None
     name: str | None = Field(None, title="Name")
     refusal: str | None = Field(None, title="Refusal")
-    tool_calls: (
-        list[
-            ChatCompletionMessageFunctionToolCallParam
-            | ChatCompletionMessageCustomToolCallParam
-        ]
-        | None
-    ) = Field(None, title="Tool Calls")
+    tool_calls: list[ChatCompletionMessageFunctionToolCallParam | ChatCompletionMessageCustomToolCallParam] | None = (
+        Field(None, title="Tool Calls")
+    )
 
 
 class ChatCompletionUserMessageParam(BaseModel):
@@ -760,9 +736,7 @@ class WebSearchOptions(BaseModel):
     model_config = ConfigDict(
         extra="allow",
     )
-    search_context_size: SearchContextSize | None = Field(
-        None, title="Search Context Size"
-    )
+    search_context_size: SearchContextSize | None = Field(None, title="Search Context Size")
     user_location: WebSearchOptionsUserLocation | None = None
 
 
@@ -776,12 +750,9 @@ class ChatCompletionMessage(BaseModel):
     annotations: list[Annotation] | None = Field(None, title="Annotations")
     audio: ChatCompletionAudio | None = None
     function_call: FunctionCallModel | None = None
-    tool_calls: (
-        list[
-            ChatCompletionMessageFunctionToolCall | ChatCompletionMessageCustomToolCall
-        ]
-        | None
-    ) = Field(None, title="Tool Calls")
+    tool_calls: list[ChatCompletionMessageFunctionToolCall | ChatCompletionMessageCustomToolCall] | None = Field(
+        None, title="Tool Calls"
+    )
 
 
 class ChoiceLogprobs(BaseModel):
@@ -807,12 +778,8 @@ class OpenAIChatCompletionRequest(BaseModel):
     model: str | Model = Field(..., title="Model")
     audio: ChatCompletionAudioParam | None = None
     frequency_penalty: float | None = Field(None, title="Frequency Penalty")
-    function_call: FunctionCall | ChatCompletionFunctionCallOptionParam | None = Field(
-        None, title="Function Call"
-    )
-    functions: list[OpenaiTypesChatCompletionCreateParamsFunction] | None = Field(
-        None, title="Functions"
-    )
+    function_call: FunctionCall | ChatCompletionFunctionCallOptionParam | None = Field(None, title="Function Call")
+    functions: list[OpenaiTypesChatCompletionCreateParamsFunction] | None = Field(None, title="Functions")
     logit_bias: dict[str, int] | None = Field(None, title="Logit Bias")
     logprobs: bool | None = Field(None, title="Logprobs")
     max_completion_tokens: int | None = Field(None, title="Max Completion Tokens")
@@ -825,9 +792,9 @@ class OpenAIChatCompletionRequest(BaseModel):
     presence_penalty: float | None = Field(None, title="Presence Penalty")
     prompt_cache_key: str | None = Field(None, title="Prompt Cache Key")
     reasoning_effort: ReasoningEffort | None = Field(None, title="Reasoning Effort")
-    response_format: (
-        ResponseFormatText | ResponseFormatJSONSchema | ResponseFormatJSONObject | None
-    ) = Field(None, title="Response Format")
+    response_format: ResponseFormatText | ResponseFormatJSONSchema | ResponseFormatJSONObject | None = Field(
+        None, title="Response Format"
+    )
     safety_identifier: str | None = Field(None, title="Safety Identifier")
     seed: int | None = Field(None, title="Seed")
     service_tier: ServiceTier | None = Field(None, title="Service Tier")
