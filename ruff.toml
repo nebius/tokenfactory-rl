@@ -14,16 +14,16 @@ preview = true
 [lint]
 extend-safe-fixes = [
     "C408",    # unnecessary-collection-call
+    "PLR6104", # non-augmented-assignment
     "PT006",   # pytest-parametrize-names-wrong-type
     "RUF022",  # unsorted-dunder-all
     "SIM101",  # duplicate-isinstance-call
     "SIM108",  # if-else-block-instead-of-if-exp
+    "TC002",   # typing-only-third-party-import
     "UP006",   # non-pep585-annotation
     "UP007",   # non-pep604-annotation-union
     "UP035",   # deprecated-import
     "UP038",   # non-pep604-isinstance
-    "PLR6104", # non-augmented-assignment
-    "TC002",
 ]
 extend-unsafe-fixes = [
     "PGH003", # blanket-type-ignore
@@ -40,12 +40,17 @@ select = [
     "COM",   # flake8-commas
     "D",     # pydocstyle
     "DOC",   # pydoclint
+    "DTZ",   # flake8-datetimez
     "E",     # pycodestyle Error
     "ERA",   # eradicate
     "EXE",   # flake8-executable
     "F",     # Pyflakes
     "FA",    # flake8-future-annotations
+    "FLY",   # flynt
+    "FURB",  # refurb
     "I",     # isort
+    "ICN",   # flake8-import-conventions
+    "INP",   # flake8-no-pep420
     "LOG",   # flake8-logging
     "N",     # pep8-naming
     "PERF",  # Perflint
@@ -55,6 +60,7 @@ select = [
     "PT",    # flake8-pytest-style
     "PTH",   # flake8-use-pathlib
     "PYI",   # flake8-pyi
+    "Q",     # flake8-quotes
     "RET",   # flake8-return
     "RSE",   # flake8-raise
     "RUF",   # Ruff-specific rules
@@ -62,7 +68,7 @@ select = [
     "SIM",   # flake8-simplify
     "SLOT",  # flake8-slots
     "T",     # flake8-debugger
-    "TCH",   # flake8-type-checking
+    "TC",   # flake8-type-checking
     "TID",   # flake8-tidy-imports
     "TRY",   # tryceratops
     "UP",    # pyupgrade
@@ -70,13 +76,8 @@ select = [
     "YTT",   # flake8-2020
 ]
 
-extend-ignore = [
-    "ANN003", # missing-type-kwargs
-    "TRY003", # raise-vanilla-args
-    "D203",   # incorrect-blank-line-before-class
-    "D213",   # multi-line-summary-second-line
-    "D205",
-    "S101",  # assert
+ignore = [
+    "ANN003",   # missing-type-kwargs
     "COM812",   # missing-trailing-comma
     "D100",     # undocumented-public-module
     "D101",     # undocumented-public-class
@@ -84,23 +85,28 @@ extend-ignore = [
     "D103",     # undocumented-public-function
     "D104",     # undocumented-public-package
     "D107",     # undocumented-public-init
+    "D203",     # incorrect-blank-line-before-class
+    "D205",     # missing-blank-line-after-summary
+    "D213",     # multi-line-summary-second-line
     "PLC0415",  # import-outside-top-level
-    "TC006",
+    "S101",     # assert
+    "TC006",    # runtime-cast-value
+    "TRY003",   # raise-vanilla-args
 ]
 
 [lint.per-file-ignores]
 "*" = []
 
 "src/tokenfactory/rl/api_client/models.py" = [
-    "ERA001",
-    "N815",
+    "ERA001", # commented-out-code
+    "N815",   # mixed-case-variable-in-class-scope
 ]
 
 "tests/**" = [
-    "PLR",
-    "D",       # pydocstyle
+    "D",       # pydocstyleT
     "DOC",     # pydoclint
-    "RUF069",
+    "PLR",     # efactor-plr
+    "RUF069",  # float-equality-comparison
 ]
 
 "tests/**/test_*.py" = [
