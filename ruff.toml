@@ -105,6 +105,7 @@ ignore = [
 "tests/**" = [
     "D",       # pydocstyleT
     "DOC",     # pydoclint
+    "INP001",  # implicit-namespace-package
     "PLR",     # efactor-plr
     "RUF069",  # float-equality-comparison
 ]
