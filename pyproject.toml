@@ -13,12 +13,20 @@ dependencies = [
 ]
 
 [dependency-groups]
-dev = [
+tests = [
     "pytest>=9.0.3,<10",
     "pytest-httpx>=0.36.2,<1",
-
+    "pytest-cov",
+    "pytest-html",
+    "tomli; python_version < '3.11'",
+]
+dev = [
+    "tokenfactory-rl[tests]",
     "ruff~=0.15.13",
     "ty~=0.0.38",
+]
+dev-security = [
+    "semgrep",
 ]
 
 [build-system]
