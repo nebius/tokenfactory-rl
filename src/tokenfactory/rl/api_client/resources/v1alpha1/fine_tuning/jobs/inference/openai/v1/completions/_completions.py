@@ -1,9 +1,7 @@
 from __future__ import annotations
 
 from tokenfactory.rl.api_client.models import Completion, OpenAICompletionRequest
-from tokenfactory.rl.api_client.resources.v1alpha1.fine_tuning.jobs._base import (
-    BaseJobIDResource,
-)
+from tokenfactory.rl.api_client.resources.v1alpha1.fine_tuning.jobs._base import BaseJobIDResource
 
 
 class Completions(BaseJobIDResource):

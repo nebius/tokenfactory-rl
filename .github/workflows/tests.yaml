@@ -1,0 +1,141 @@
+name: pytest
+
+on:
+  pull_request:
+  release:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+jobs:
+  build-matrix:
+    runs-on: ubuntu-latest
+    outputs:
+      py: ${{ steps.mk.outputs.py }}
+      py_edges: ${{ steps.mk.outputs.py_edges }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - id: mk
+        run: |
+          python -m pip install -q packaging
+          py=$(python tests/utils/versions.py)
+          py_edges=$(echo "$py" | jq -c '[.[0], .[-1]]')
+          echo "py=$py" >> "$GITHUB_OUTPUT"
+          echo "py_edges=$py_edges" >> "$GITHUB_OUTPUT"
+
+  pytest:
+    needs: build-matrix
+    runs-on: ${{ matrix.os }}
+    strategy:
+      matrix:
+        python-version: ${{ fromJson(needs.build-matrix.outputs.py) }}
+        os: [ubuntu-latest, macos-latest, windows-latest]
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.python-version }}
+
+      - run: pipx install uv
+
+      - name: Run pytest
+        shell: bash
+        run: |
+          uv run --group tests pytest \
+            --cov=tokenfactory_rl \
+            --cov-report xml:coverage.xml \
+            --junitxml=report.xml \
+            --cov-report=term-missing \
+            --html=report.html \
+            -vv
+
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: pytest-${{ matrix.python-version }}-${{ runner.os }}
+          path: |
+            coverage.xml
+            report.xml
+            report.html
+
+  pytest-after-build:
+    needs: build-matrix
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        python-version: ${{ fromJson(needs.build-matrix.outputs.py_edges) }}
+        format: [tar.gz, whl]
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.python-version }}
+
+      - run: pipx install uv
+      - run: uv build
+      - name: Upload built artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: dist-${{ matrix.python-version }}-${{ matrix.format }}
+          path: dist/*.${{ matrix.format }}
+          if-no-files-found: error
+          retention-days: 28
+
+      - run: uv sync --group tests
+      - run: uv pip uninstall tokenfactory-rl
+      - run: uv pip install dist/*.${{ matrix.format }}
+      - run: source .venv/bin/activate
+      - run: rm -rf src
+
+      - name: Verify package installation
+        run: |
+          echo "Checking tokenfactory-rl installation:"
+          uv pip list | grep tokenfactory-rl
+          if uv pip list | grep tokenfactory-rl | grep -q "$PWD"; then
+            echo "ERROR: Package installed from local directory!"
+            exit 1
+          fi
+          echo "OK: Package installed from built artifact"
+
+      - name: Run pytest
+        run: |
+          source .venv/bin/activate && pytest \
+            --cov=tokenfactory_rl \
+            --cov-report xml:coverage.xml \
+            --junitxml=report.xml \
+            --cov-report=term-missing \
+            --html=report.html \
+            -vv
+
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: pytest-${{ matrix.python-version }}-${{ matrix.format }}
+          path: |
+            coverage.xml
+            report.xml
+            report.html
+          retention-days: 7
+  tests-complete:
+    needs: [pytest, pytest-after-build]
+    if: always()
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check tests result
+        if: ${{ !contains(needs.*.result, 'failure') && !contains(needs.*.result, 'cancelled') && !contains(needs.*.result, 'skipped') }}
+        run: echo "✅ All tests passed"
+
+      - name: Fail if any test failed
+        if: ${{ contains(needs.*.result, 'failure') || contains(needs.*.result, 'cancelled') || contains(needs.*.result, 'skipped') }}
+        run: |
+          echo "❌ Some tests failed, were cancelled, or were skipped"
+          exit 1

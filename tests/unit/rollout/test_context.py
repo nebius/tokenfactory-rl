@@ -56,36 +56,25 @@ class TestRolloutContext:
 
     def test_openai_endpoint_calls_api(self):
         ctx, client = _make_context()
-        client.v1alpha1.fine_tuning.jobs.inference.openai.v1.endpoint.return_value = (
-            "http://inference:8000/v1"
-        )
+        client.v1alpha1.fine_tuning.jobs.inference.openai.v1.endpoint.return_value = "http://inference:8000/v1"
 
         endpoint = ctx.openai_endpoint
 
         assert endpoint == "http://inference:8000/v1"
-        client.v1alpha1.fine_tuning.jobs.inference.openai.v1.endpoint.assert_called_once_with(
-            job_id="ctx-job"
-        )
+        client.v1alpha1.fine_tuning.jobs.inference.openai.v1.endpoint.assert_called_once_with(job_id="ctx-job")
 
     def test_openai_endpoint_is_cached(self):
         ctx, client = _make_context()
-        client.v1alpha1.fine_tuning.jobs.inference.openai.v1.endpoint.return_value = (
-            "http://inference:8000/v1"
-        )
+        client.v1alpha1.fine_tuning.jobs.inference.openai.v1.endpoint.return_value = "http://inference:8000/v1"
 
         _ = ctx.openai_endpoint
         _ = ctx.openai_endpoint
 
-        assert (
-            client.v1alpha1.fine_tuning.jobs.inference.openai.v1.endpoint.call_count
-            == 1
-        )
+        assert client.v1alpha1.fine_tuning.jobs.inference.openai.v1.endpoint.call_count == 1
 
     def test_openai_client_uses_endpoint(self):
         ctx, client = _make_context()
-        client.v1alpha1.fine_tuning.jobs.inference.openai.v1.endpoint.return_value = (
-            "http://inference:8000/v1"
-        )
+        client.v1alpha1.fine_tuning.jobs.inference.openai.v1.endpoint.return_value = "http://inference:8000/v1"
 
         oai = ctx.openai_client
 
@@ -96,9 +85,7 @@ class TestRolloutContext:
 
     def test_openai_client_is_cached(self):
         ctx, client = _make_context()
-        client.v1alpha1.fine_tuning.jobs.inference.openai.v1.endpoint.return_value = (
-            "http://inference:8000/v1"
-        )
+        client.v1alpha1.fine_tuning.jobs.inference.openai.v1.endpoint.return_value = "http://inference:8000/v1"
 
         c1 = ctx.openai_client
         c2 = ctx.openai_client
@@ -106,9 +93,7 @@ class TestRolloutContext:
 
     def test_async_openai_client_uses_endpoint(self):
         ctx, client = _make_context()
-        client.v1alpha1.fine_tuning.jobs.inference.openai.v1.endpoint.return_value = (
-            "http://inference:8000/v1"
-        )
+        client.v1alpha1.fine_tuning.jobs.inference.openai.v1.endpoint.return_value = "http://inference:8000/v1"
 
         oai = ctx.async_openai_client()
 
@@ -119,9 +104,7 @@ class TestRolloutContext:
 
     def test_async_openai_client_is_not_cached(self):
         ctx, client = _make_context()
-        client.v1alpha1.fine_tuning.jobs.inference.openai.v1.endpoint.return_value = (
-            "http://inference:8000/v1"
-        )
+        client.v1alpha1.fine_tuning.jobs.inference.openai.v1.endpoint.return_value = "http://inference:8000/v1"
 
         c1 = ctx.async_openai_client()
         c2 = ctx.async_openai_client()

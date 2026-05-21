@@ -1,0 +1,162 @@
+line-length = 120
+src = ["src"]
+
+target-version = "py310"
+
+exclude = [
+    ".git",
+    ".venv",
+    "venv",
+]
+
+preview = true
+
+[lint]
+extend-safe-fixes = [
+    "C408",    # unnecessary-collection-call
+    "PLR6104", # non-augmented-assignment
+    "PT006",   # pytest-parametrize-names-wrong-type
+    "RUF022",  # unsorted-dunder-all
+    "SIM101",  # duplicate-isinstance-call
+    "SIM108",  # if-else-block-instead-of-if-exp
+    "TC002",   # typing-only-third-party-import
+    "UP006",   # non-pep585-annotation
+    "UP007",   # non-pep604-annotation-union
+    "UP035",   # deprecated-import
+    "UP038",   # non-pep604-isinstance
+]
+extend-unsafe-fixes = [
+    "PGH003", # blanket-type-ignore
+    "RUF100", # unused-noqa
+    "RUF102", # invalid-rule-code
+]
+select = [
+    "A",     # flake8-builtins
+    "AIR",   # Airflow
+    "ANN",   # flake8-annotations
+    "ASYNC", # flake8-async
+    "B",     # flake8-bugbear
+    "C",     # flake8-comprehensions
+    "COM",   # flake8-commas
+    "D",     # pydocstyle
+    "DOC",   # pydoclint
+    "DTZ",   # flake8-datetimez
+    "E",     # pycodestyle Error
+    "ERA",   # eradicate
+    "EXE",   # flake8-executable
+    "F",     # Pyflakes
+    "FA",    # flake8-future-annotations
+    "FLY",   # flynt
+    "FURB",  # refurb
+    "I",     # isort
+    "ICN",   # flake8-import-conventions
+    "INP",   # flake8-no-pep420
+    "LOG",   # flake8-logging
+    "N",     # pep8-naming
+    "PERF",  # Perflint
+    "PGH",   # pygrep-hooks
+    "PIE",   # flake8-pie
+    "PL",    # Pylint
+    "PT",    # flake8-pytest-style
+    "PTH",   # flake8-use-pathlib
+    "PYI",   # flake8-pyi
+    "Q",     # flake8-quotes
+    "RET",   # flake8-return
+    "RSE",   # flake8-raise
+    "RUF",   # Ruff-specific rules
+    "S",     # flake8-bandit
+    "SIM",   # flake8-simplify
+    "SLOT",  # flake8-slots
+    "T",     # flake8-debugger
+    "TC",   # flake8-type-checking
+    "TID",   # flake8-tidy-imports
+    "TRY",   # tryceratops
+    "UP",    # pyupgrade
+    "W",     # pycodestyle Warning
+    "YTT",   # flake8-2020
+]
+
+ignore = [
+    "ANN003",   # missing-type-kwargs
+    "COM812",   # missing-trailing-comma
+    "D100",     # undocumented-public-module
+    "D101",     # undocumented-public-class
+    "D102",     # undocumented-public-method
+    "D103",     # undocumented-public-function
+    "D104",     # undocumented-public-package
+    "D107",     # undocumented-public-init
+    "D203",     # incorrect-blank-line-before-class
+    "D205",     # missing-blank-line-after-summary
+    "D213",     # multi-line-summary-second-line
+    "PLC0415",  # import-outside-top-level
+    "S101",     # assert
+    "TC006",    # runtime-cast-value
+    "TRY003",   # raise-vanilla-args
+]
+
+[lint.per-file-ignores]
+"*" = []
+
+"src/tokenfactory/rl/api_client/models.py" = [
+    "ERA001", # commented-out-code
+    "N815",   # mixed-case-variable-in-class-scope
+]
+
+"tests/**" = [
+    "D",       # pydocstyleT
+    "DOC",     # pydoclint
+    "INP001",  # implicit-namespace-package
+    "PLR",     # efactor-plr
+    "RUF069",  # float-equality-comparison
+]
+
+"tests/**/test_*.py" = [
+    "ANN",      # flake8-annotations-ann
+    "RUF059",   # unused-unpacked-variable
+    "S101",     # assert
+    "S106",     # hardcoded-password-func-arg
+]
+
+
+"!tests/**" = [
+    "PLC2701", # import-private-name
+]
+
+"src/tokenfactory/rl/examples/**" = [
+    "S311",   # suspicious-non-cryptographic-random-usage
+]
+
+"!src/tokenfactory/rl/examples/**" = [
+    "PLC2701", # import-private-name
+]
+
+
+[lint.mccabe]
+max-complexity = 20
+
+[lint.isort]
+known-first-party = ["tokenfactory"]
+known-third-party = []
+
+combine-as-imports = false
+force-sort-within-sections = false
+lines-after-imports = 2
+split-on-trailing-comma = false
+section-order = ["future", "standard-library", "third-party", "first-party", "local-folder"]
+
+[lint.flake8-annotations]
+suppress-none-returning = true
+
+[lint.flake8-implicit-str-concat]
+allow-multiline = false
+
+[format]
+skip-magic-trailing-comma = false
+
+[lint.flake8-type-checking]
+runtime-evaluated-base-classes = [
+    "pydantic.BaseModel",
+]
+
+[lint.pylint]
+max-args = 12

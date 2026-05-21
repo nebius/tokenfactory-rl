@@ -2,11 +2,10 @@ from __future__ import annotations
 
 import os
 from functools import cached_property
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
 import httpx
 from tenacity import retry, retry_if_exception, stop_after_attempt, wait_exponential
-from tenacity.wait import wait_base
 
 from tokenfactory.rl.api_client._exceptions import (
     BadRequestError,
@@ -18,6 +17,11 @@ from tokenfactory.rl.api_client._exceptions import (
     RedirectResponseError,
 )
 from tokenfactory.rl.api_client.resources.v1alpha1 import V1Alpha1
+
+
+if TYPE_CHECKING:
+    from tenacity.wait import wait_base
+    from typing_extensions import Self
 
 
 ENV_PREFIX = "TOKENFACTORY_"
@@ -46,9 +50,7 @@ class TokenFactory:
         if api_key is None:
             api_key = os.environ.get(API_KEY_ENV_VAR)
         if api_key is None:
-            raise MissingAPIKeyError(
-                f"Missing API key, set env var {API_KEY_ENV_VAR} or pass to constructor"
-            )
+            raise MissingAPIKeyError(f"Missing API key, set env var {API_KEY_ENV_VAR} or pass to constructor")
         self._api_key = api_key
 
         if httpx_client is not None:
@@ -88,9 +90,7 @@ class TokenFactory:
         )
         def _do_request() -> httpx.Response:
             headers = self._build_headers() | kwargs.pop("headers", {})
-            response = self._httpx_client.request(
-                method, url, headers=headers, **kwargs
-            )
+            response = self._httpx_client.request(method, url, headers=headers, **kwargs)
             _raise_errors(response)
             return response
 
@@ -99,10 +99,10 @@ class TokenFactory:
     def close(self) -> None:
         self._httpx_client.close()
 
-    def __enter__(self) -> "TokenFactory":
+    def __enter__(self) -> Self:
         return self
 
-    def __exit__(self, *args) -> None:
+    def __exit__(self, *args) -> None:  # noqa: ANN002
         self.close()
 
     def _build_headers(self) -> dict[str, str]:
@@ -112,10 +112,7 @@ class TokenFactory:
 def _is_retryable(exc: BaseException) -> bool:
     return isinstance(
         exc,
-        httpx.TransportError
-        | httpx.DecodingError
-        | InternalServerError
-        | JsonParseError,
+        httpx.TransportError | httpx.DecodingError | InternalServerError | JsonParseError,
     )
 
 
@@ -132,29 +129,23 @@ def _get_error_message(body: dict[str, Any] | None) -> str:
 def _raise_errors(response: httpx.Response) -> None:
     status_type = response.status_code // 100
     if status_type == 1:
-        raise InformationalResponseError(
-            f"Status code: {response.status_code}", response=response
-        )
-    if status_type == 3:
-        raise RedirectResponseError(
-            f"Status code: {response.status_code}", response=response
-        )
-    if status_type == 5:
-        raise InternalServerError(
-            f"Status code: {response.status_code}", response=response
-        )
-    if response.status_code in (400, 422):
+        raise InformationalResponseError(f"Status code: {response.status_code}", response=response)
+    if status_type == 3:  # noqa: PLR2004
+        raise RedirectResponseError(f"Status code: {response.status_code}", response=response)
+    if status_type == 5:  # noqa: PLR2004
+        raise InternalServerError(f"Status code: {response.status_code}", response=response)
+    if response.status_code in {400, 422}:
         try:
             response_json = response.json()
         except ValueError:
             response_json = None
         raise BadRequestError(_get_error_message(response_json), response=response)
-    if response.status_code == 404:
+    if response.status_code == 404:  # noqa: PLR2004
         try:
             response_json = response.json()
             raise NotFoundError(_get_error_message(response_json), response=response)
         except ValueError:
             pass
         raise NotFoundError("Resource not found", response=response)
-    if status_type == 4:
+    if status_type == 4:  # noqa: PLR2004
         raise BadRequestError(response.reason_phrase, response=response)

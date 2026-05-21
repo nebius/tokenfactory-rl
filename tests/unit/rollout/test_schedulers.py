@@ -83,9 +83,7 @@ def _run_full_cycle(
 class TestCreateRolloutScheduler:
     def test_creates_any_staleness_when_allowed_staleness_none(self):
         config = _make_config(allowed_staleness=None)
-        assert isinstance(
-            create_rollout_scheduler(config), AnyStalenessRolloutScheduler
-        )
+        assert isinstance(create_rollout_scheduler(config), AnyStalenessRolloutScheduler)
 
     def test_creates_drop_stale_when_drop_flag_true(self):
         config = _make_config(allowed_staleness=1, drop_stale_trajectories=True)
@@ -119,9 +117,7 @@ class TestBaseSchedulerBehaviour:
     def test_set_initial_batch_index_with_n_samples_greater_than_batch_size_raises(
         self,
     ):
-        s = AnyStalenessRolloutScheduler(
-            config=_make_config(allowed_staleness=None, batch_size=4)
-        )
+        s = AnyStalenessRolloutScheduler(config=_make_config(allowed_staleness=None, batch_size=4))
         with pytest.raises(ValueError, match="greater than batch size"):
             s.set_initial_batch_index(batch_index=0, n_samples=5)
 
@@ -148,16 +144,12 @@ class TestBaseSchedulerBehaviour:
         assert s._task_num_in_progress == 0
 
     def test_is_all_finished_false_when_num_batches_none(self):
-        s = AnyStalenessRolloutScheduler(
-            config=_make_config(allowed_staleness=None, num_batches=None)
-        )
+        s = AnyStalenessRolloutScheduler(config=_make_config(allowed_staleness=None, num_batches=None))
         _init_scheduler(s)
         assert s.is_all_finished is False
 
     def test_is_all_finished_true_when_all_batches_done(self):
-        config = _make_config(
-            allowed_staleness=None, num_batches=1, batch_size=2, num_samples_per_task=1
-        )
+        config = _make_config(allowed_staleness=None, num_batches=1, batch_size=2, num_samples_per_task=1)
         s = AnyStalenessRolloutScheduler(config=config)
         _init_scheduler(s)
         _run_full_cycle(s, "t1")
@@ -181,9 +173,7 @@ class TestBaseSchedulerBehaviour:
             s.add_sample_group(task_id="t1", samples=[FakeSample()])
 
     def test_resume_mid_batch(self):
-        config = _make_config(
-            allowed_staleness=None, num_batches=1, batch_size=4, num_samples_per_task=1
-        )
+        config = _make_config(allowed_staleness=None, num_batches=1, batch_size=4, num_samples_per_task=1)
         s = AnyStalenessRolloutScheduler(config=config)
         s.set_initial_batch_index(batch_index=0, n_samples=3)
         s.set_inference_version(inference_version=0)
@@ -225,9 +215,7 @@ class TestBaseSchedulerBehaviour:
 
 class TestAnyStalenessScheduler:
     def test_basic_flow(self):
-        config = _make_config(
-            allowed_staleness=None, batch_size=4, num_samples_per_task=1
-        )
+        config = _make_config(allowed_staleness=None, batch_size=4, num_samples_per_task=1)
         s = AnyStalenessRolloutScheduler(config=config)
         _init_scheduler(s)
 
@@ -235,26 +223,20 @@ class TestAnyStalenessScheduler:
         assert len(ready) == 1
 
     def test_spawns_up_to_parallel_rollouts(self):
-        config = _make_config(
-            allowed_staleness=None, parallel_rollouts=8, num_samples_per_task=1
-        )
+        config = _make_config(allowed_staleness=None, parallel_rollouts=8, num_samples_per_task=1)
         s = AnyStalenessRolloutScheduler(config=config)
         _init_scheduler(s)
         assert s.get_num_rollouts_to_spawn() == 8
 
     def test_spawns_accounts_for_in_progress(self):
-        config = _make_config(
-            allowed_staleness=None, parallel_rollouts=4, num_samples_per_task=1
-        )
+        config = _make_config(allowed_staleness=None, parallel_rollouts=4, num_samples_per_task=1)
         s = AnyStalenessRolloutScheduler(config=config)
         _init_scheduler(s)
         s.add_tasks(tasks=[FakeTask(id="t1"), FakeTask(id="t2")])
         assert s.get_num_rollouts_to_spawn() == 2
 
     def test_spawns_accounts_for_num_samples_per_task(self):
-        config = _make_config(
-            allowed_staleness=None, parallel_rollouts=8, num_samples_per_task=2
-        )
+        config = _make_config(allowed_staleness=None, parallel_rollouts=8, num_samples_per_task=2)
         s = AnyStalenessRolloutScheduler(config=config)
         _init_scheduler(s)
         s.add_tasks(tasks=[FakeTask(id="t1")])
@@ -262,9 +244,7 @@ class TestAnyStalenessScheduler:
         assert s.get_num_rollouts_to_spawn() == 6
 
     def test_multiple_samples_per_task(self):
-        config = _make_config(
-            allowed_staleness=None, batch_size=4, num_samples_per_task=2
-        )
+        config = _make_config(allowed_staleness=None, batch_size=4, num_samples_per_task=2)
         s = AnyStalenessRolloutScheduler(config=config)
         _init_scheduler(s)
 
@@ -276,9 +256,7 @@ class TestAnyStalenessScheduler:
         assert len(ready) == 2
 
     def test_samples_accepted_regardless_of_version_gap(self):
-        config = _make_config(
-            allowed_staleness=None, batch_size=4, num_samples_per_task=1
-        )
+        config = _make_config(allowed_staleness=None, batch_size=4, num_samples_per_task=1)
         s = AnyStalenessRolloutScheduler(config=config)
         _init_scheduler(s, inference_version=0)
 
