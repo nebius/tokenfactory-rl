@@ -48,7 +48,7 @@ jobs:
       - name: Run pytest
         shell: bash
         run: |
-          uv run --all-extras pytest \
+          uv run --group tests pytest \
             --cov=tokenfactory_rl \
             --cov-report xml:coverage.xml \
             --junitxml=report.xml \
@@ -90,7 +90,7 @@ jobs:
           if-no-files-found: error
           retention-days: 28
 
-      - run: uv sync --all-extras
+      - run: uv sync --group tests
       - run: uv pip uninstall tokenfactory-rl
       - run: uv pip install dist/*.${{ matrix.format }}
       - run: source .venv/bin/activate
