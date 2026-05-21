@@ -49,7 +49,7 @@ jobs:
         shell: bash
         run: |
           uv run --all-extras pytest \
-            --cov=contree_sdk \
+            --cov=tokenfactory_rl \
             --cov-report xml:coverage.xml \
             --junitxml=report.xml \
             --cov-report=term-missing \
@@ -91,16 +91,16 @@ jobs:
           retention-days: 28
 
       - run: uv sync --all-extras
-      - run: uv pip uninstall contree-sdk contree-docs
+      - run: uv pip uninstall tokenfactory-rl
       - run: uv pip install dist/*.${{ matrix.format }}
       - run: source .venv/bin/activate
-      - run: rm -rf contree_sdk
+      - run: rm -rf src
 
       - name: Verify package installation
         run: |
-          echo "Checking contree-sdk installation:"
-          uv pip list | grep contree-sdk
-          if uv pip list | grep contree-sdk | grep -q "$PWD"; then
+          echo "Checking tokenfactory-rl installation:"
+          uv pip list | grep tokenfactory-rl
+          if uv pip list | grep tokenfactory-rl | grep -q "$PWD"; then
             echo "ERROR: Package installed from local directory!"
             exit 1
           fi
@@ -109,7 +109,7 @@ jobs:
       - name: Run pytest
         run: |
           source .venv/bin/activate && pytest \
-            --cov=contree_sdk \
+            --cov=tokenfactory_rl \
             --cov-report xml:coverage.xml \
             --junitxml=report.xml \
             --cov-report=term-missing \

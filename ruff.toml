@@ -1,5 +1,5 @@
 line-length = 120
-src = ["contree_sdk"]
+src = ["src"]
 
 target-version = "py310"
 
@@ -89,10 +89,7 @@ extend-ignore = [
 ]
 
 [lint.per-file-ignores]
-
-
-"*" = [
-]
+"*" = []
 
 "src/tokenfactory/rl/api_client/models.py" = [
     "ERA001",
@@ -131,7 +128,7 @@ extend-ignore = [
 max-complexity = 20
 
 [lint.isort]
-known-first-party = ["contree_sdk"]
+known-first-party = ["tokenfactory"]
 known-third-party = []
 
 combine-as-imports = false
