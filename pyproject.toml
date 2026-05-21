@@ -21,7 +21,7 @@ tests = [
     "tomli; python_version < '3.11'",
 ]
 dev = [
-    "tokenfactory-rl[tests]",
+    {include-group = "tests"},
     "ruff~=0.15.13",
     "ty~=0.0.38",
 ]
