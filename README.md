@@ -105,14 +105,16 @@ def roll_out_task(task: Task, context: RolloutContext, my_config: MyConfig) -> S
     response = completion.choices[0].message.content
     assert response is not None
 
-    return SampleGroup(samples=[
-        Sample(
-            token_ids=token_ids,
-            logprobs=logprobs,
-            mask=mask,
-            normalized_reward=reward_fn(response=response, answer=task.answer),
-        )
-    ])
+    return SampleGroup(
+        samples=[
+            Sample(
+                token_ids=token_ids,
+                logprobs=logprobs,
+                mask=mask,
+                normalized_reward=reward_fn(response=response, answer=task.answer),
+            )
+        ]
+    )
 
 
 runner = RolloutRunner(
