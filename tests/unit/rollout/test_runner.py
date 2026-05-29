@@ -374,7 +374,7 @@ class TestSubmitSamples:
 
     def test_batch_boundary_creates_new_batch(self):
         client = _make_api_client()
-        config = _make_config(batch_size=2)
+        config = _make_config(batch_size=2, num_batches=3)
         runner = _make_runner(api_client=client, config=config)
         runner._batch_idx = 0
         runner._batch_n_samples = 1  # 1 already submitted, batch_size=2
@@ -386,6 +386,37 @@ class TestSubmitSamples:
 
         assert runner._batch_idx == 1
         assert runner._batch_n_samples == 0
+        client.v1alpha1.fine_tuning.jobs.batches.create.assert_called_once_with(job_id="test-job", index=1)
+
+    def test_final_batch_does_not_create_next_batch(self):
+        client = _make_api_client()
+        config = _make_config(batch_size=2, num_batches=3)
+        runner = _make_runner(api_client=client, config=config)
+        runner._batch_idx = 2  # filling the last batch (num_batches=3)
+        runner._batch_n_samples = 1
+
+        runner._scheduler = MagicMock()
+        runner._scheduler.get_ready_samples.return_value = [_make_sample()]
+
+        runner._submit_samples()
+
+        assert runner._batch_idx == 3
+        assert runner._batch_n_samples == 0
+        client.v1alpha1.fine_tuning.jobs.batches.create.assert_not_called()
+
+    def test_unbounded_num_batches_always_creates_next_batch(self):
+        client = _make_api_client()
+        config = _make_config(batch_size=2, num_batches=None)
+        runner = _make_runner(api_client=client, config=config)
+        runner._batch_idx = 0
+        runner._batch_n_samples = 1
+
+        runner._scheduler = MagicMock()
+        runner._scheduler.get_ready_samples.return_value = [_make_sample()]
+
+        runner._submit_samples()
+
+        assert runner._batch_idx == 1
         client.v1alpha1.fine_tuning.jobs.batches.create.assert_called_once_with(job_id="test-job", index=1)
 
     def test_no_new_batch_when_not_full(self):

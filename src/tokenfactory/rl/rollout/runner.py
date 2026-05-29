@@ -210,7 +210,8 @@ class RolloutRunner(Generic[TaskSpec_contra]):
             if self._batch_n_samples == self._config.batch_size:
                 self._batch_idx += 1
                 self._batch_n_samples = 0
-                self._jobs_api.batches.create(job_id=self._config.job_id, index=self._batch_idx)
+                if self._config.num_batches is None or self._batch_idx < self._config.num_batches:
+                    self._jobs_api.batches.create(job_id=self._config.job_id, index=self._batch_idx)
 
 
 class JobStatusTracker(threading.Thread):
