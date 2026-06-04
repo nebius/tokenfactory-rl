@@ -10,8 +10,6 @@ This package does not create or configure fine-tuning jobs. It assumes a TokenFa
 - schedule samples into batches while respecting model-version staleness rules;
 - upload completed batches back to the TokenFactory API.
 
-For the internal end-to-end job workflow, see [RFT Guide v2](https://nebius.atlassian.net/wiki/spaces/NBAI/pages/1831534780/RFT+Guide+v2).
-
 ## Installation
 
 The package requires Python `>=3.10,<3.15`.
