@@ -6,7 +6,7 @@ from random import choices
 from pydantic_settings import BaseSettings
 
 from tokenfactory.rl.api_client import TokenFactory
-from tokenfactory.rl.rollout import RolloutConfig, RolloutContext, RolloutRunner
+from tokenfactory.rl.rollout import ExecutorType, RolloutConfig, RolloutContext, RolloutRunner
 from tokenfactory.rl.rollout.models import Sample, SampleGroup
 
 from .utils import parse_completion
@@ -76,7 +76,7 @@ def main():
             job_id="example-job-id",
             model_name="Qwen/Qwen2.5-1.5B-Instruct",
             max_concurrency=32,
-            executor_type="thread",
+            executor_type=ExecutorType.THREAD,
             allowed_staleness=0,
             num_batches=1000,
             batch_size=128,

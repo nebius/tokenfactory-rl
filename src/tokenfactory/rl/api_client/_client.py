@@ -20,9 +20,10 @@ from tokenfactory.rl.api_client.resources.v1alpha1 import V1Alpha1
 
 
 if TYPE_CHECKING:
+    from collections.abc import Callable
+
     from tenacity.wait import wait_base
     from typing_extensions import Self
-
 
 ENV_PREFIX = "TOKENFACTORY_"
 BASE_URL_ENV_VAR = f"{ENV_PREFIX}BASE_URL"
@@ -31,13 +32,17 @@ API_KEY_ENV_VAR = f"{ENV_PREFIX}API_KEY"
 DEFAULT_BASE_URL = "https://api.tokenfactory.nebius.com"
 
 
+def default_httpx_client_factory() -> httpx.Client:
+    return httpx.Client()
+
+
 class TokenFactory:
     def __init__(
         self,
         base_url: str | None = None,
         api_key: str | None = None,
         *,
-        httpx_client: httpx.Client | None = None,
+        httpx_client_factory: Callable[[], httpx.Client] | None = None,
         max_retries: int = 3,
         tenacity_retry_wait: wait_base | None = None,
     ) -> None:
@@ -52,14 +57,11 @@ class TokenFactory:
         if api_key is None:
             raise MissingAPIKeyError(f"Missing API key, set env var {API_KEY_ENV_VAR} or pass to constructor")
         self._api_key = api_key
-
-        if httpx_client is not None:
-            self._httpx_client = httpx_client
-        else:
-            self._httpx_client = httpx.Client()
-
         self._max_retries = max_retries
         self._tenacity_retry_wait = tenacity_retry_wait
+
+        self._httpx_client_factory = httpx_client_factory or default_httpx_client_factory
+        self._httpx_client = self._httpx_client_factory()
 
     @cached_property
     def v1alpha1(self) -> V1Alpha1:

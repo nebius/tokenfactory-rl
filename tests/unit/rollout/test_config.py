@@ -3,7 +3,7 @@ from typing import Any, cast
 import pytest
 from pydantic import ValidationError
 
-from tokenfactory.rl.rollout.config import RolloutConfig
+from tokenfactory.rl.rollout.config import ExecutorType, RolloutConfig
 
 
 class TestRolloutConfig:
@@ -41,7 +41,7 @@ class TestRolloutConfig:
             batch_size=64,
             num_samples_per_task=4,
             max_concurrency=16,
-            executor_type="process",
+            executor_type=ExecutorType.PROCESS,
             num_batches=100,
             allowed_staleness=2,
             drop_stale_trajectories=True,

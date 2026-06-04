@@ -9,7 +9,7 @@ import pytest
 from tokenfactory.rl.api_client import NotFoundError
 from tokenfactory.rl.api_client.models import Batch, JobStatus
 from tokenfactory.rl.rollout import JobInitializationTimeout
-from tokenfactory.rl.rollout.config import RolloutConfig
+from tokenfactory.rl.rollout.config import ExecutorType, RolloutConfig
 from tokenfactory.rl.rollout.models import (
     JobStatusUpdate,
     RolloutException,
@@ -69,7 +69,7 @@ def _make_config(
     job_id: str = "test-job",
     model_name: str = "test-model",
     max_concurrency: int = 4,
-    executor_type: Literal["thread", "process"] = "thread",
+    executor_type: Literal[ExecutorType.THREAD, ExecutorType.PROCESS] = ExecutorType.THREAD,
     batch_size: int = 2,
     num_samples_per_task: int = 1,
     num_batches: int | None = 1,
