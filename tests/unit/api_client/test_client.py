@@ -1,5 +1,10 @@
 import json
+import pickle  # noqa: S403
+from collections.abc import Callable
+from typing import cast
+from unittest.mock import MagicMock
 
+import httpx
 import pytest
 from pytest_httpx import HTTPXMock
 
@@ -8,6 +13,24 @@ from tokenfactory.rl.api_client.models import Batch, BatchStatus, ChatCompletion
 
 
 BASE_URL = "http://test-server"
+
+
+def _runtime_status_response(request: httpx.Request, *, inference_version: int = 5) -> httpx.Response:
+    return httpx.Response(
+        200,
+        request=request,
+        json={
+            "object": "fine_tuning.job.status",
+            "inference_version": inference_version,
+            "total_batches": 20,
+            "filled_batches": 10,
+        },
+    )
+
+
+def _picklable_httpx_client_factory() -> httpx.Client:
+    transport = httpx.MockTransport(lambda request: _runtime_status_response(request, inference_version=9))
+    return httpx.Client(transport=transport)
 
 
 @pytest.fixture
@@ -207,6 +230,67 @@ def test_context_manager():
     client = TokenFactory(BASE_URL, "123")
     with client as c:
         assert c is client
+
+
+def test_httpx_client_factory_is_used_for_requests():
+    httpx_client = MagicMock(spec=httpx.Client)
+    request = httpx.Request("GET", f"{BASE_URL}/v1alpha1/fine_tuning/jobs/job-123/status")
+    httpx_client.request.return_value = _runtime_status_response(request)
+    factory = MagicMock(return_value=httpx_client)
+    client = TokenFactory(
+        BASE_URL,
+        "123",
+        httpx_client_factory=cast(Callable[[], httpx.Client], factory),
+    )
+
+    try:
+        status = client.v1alpha1.fine_tuning.jobs.get_runtime_status(job_id="job-123")
+    finally:
+        client.close()
+
+    assert isinstance(status, JobStatus)
+    assert status.inference_version == 5
+    factory.assert_called_once_with()
+    httpx_client.request.assert_called_once()
+    args = httpx_client.request.call_args.args
+    kwargs = httpx_client.request.call_args.kwargs
+    assert args == ("GET", f"{BASE_URL}/v1alpha1/fine_tuning/jobs/job-123/status")
+    assert kwargs["headers"]["Authorization"] == "Bearer 123"
+
+
+def test_context_manager_closes_factory_client():
+    httpx_client = MagicMock(spec=httpx.Client)
+    factory = MagicMock(return_value=httpx_client)
+
+    with TokenFactory(
+        BASE_URL,
+        "123",
+        httpx_client_factory=cast(Callable[[], httpx.Client], factory),
+    ) as client:
+        assert client.api_key == "123"
+
+    factory.assert_called_once_with()
+    httpx_client.close.assert_called_once_with()
+
+
+def test_pickle_roundtrip_recreates_httpx_client_from_factory():
+    client = TokenFactory(
+        BASE_URL,
+        "123",
+        httpx_client_factory=_picklable_httpx_client_factory,
+    )
+    try:
+        restored = cast(TokenFactory, pickle.loads(pickle.dumps(client)))  # noqa: S301
+    finally:
+        client.close()
+
+    try:
+        status = restored.v1alpha1.fine_tuning.jobs.get_runtime_status(job_id="job-123")
+    finally:
+        restored.close()
+
+    assert isinstance(status, JobStatus)
+    assert status.inference_version == 9
 
 
 def test_inference_resource_hierarchy(client: TokenFactory):

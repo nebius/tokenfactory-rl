@@ -1,3 +1,4 @@
+import concurrent.futures
 import queue
 import time
 from dataclasses import dataclass
@@ -6,10 +7,11 @@ from unittest.mock import MagicMock, call
 
 import pytest
 
-from tokenfactory.rl.api_client import NotFoundError
+from tokenfactory.rl.api_client import NotFoundError, TokenFactory
 from tokenfactory.rl.api_client.models import Batch, JobStatus
 from tokenfactory.rl.rollout import JobInitializationTimeout
 from tokenfactory.rl.rollout.config import ExecutorType, RolloutConfig
+from tokenfactory.rl.rollout.context import RolloutContext
 from tokenfactory.rl.rollout.models import (
     JobStatusUpdate,
     RolloutException,
@@ -31,6 +33,11 @@ from tokenfactory.rl.rollout.runner import JobStatusTracker, RolloutDispatcher, 
 @dataclass
 class FakeTaskSpec:
     question: str = "test"
+
+
+@dataclass
+class ProcessSmokeTask:
+    question: str
 
 
 class FakeDataset:
@@ -61,6 +68,23 @@ def _make_sample(
         normalized_reward=normalized_reward,
         metadata=metadata or {},
         debug_info=debug_info or {},
+    )
+
+
+def _process_smoke_rollout_fn(task: ProcessSmokeTask, context: RolloutContext) -> SampleGroup:
+    return SampleGroup(
+        samples=[
+            Sample(
+                token_ids=[1],
+                logprobs=[0.0],
+                mask=[1],
+                normalized_reward=1.0,
+                debug_info={
+                    "question": task.question,
+                    "executor_type": str(context.config.executor_type),
+                },
+            )
+        ]
     )
 
 
@@ -866,8 +890,10 @@ class TestRolloutDispatcher:
         num_rollout_retries=0,
         raise_on_rollout_failure=False,
         concurrent_workers=2,
+        executor_type: str = ExecutorType.THREAD,
+        context: RolloutContext = MagicMock()
     ) -> tuple[RolloutDispatcher[FakeTaskSpec], DispatcherInputQueue, DispatcherOutputQueue]:
-        context = MagicMock()
+        context.config.executor_type = executor_type
         input_queue: DispatcherInputQueue = queue.Queue()
         output_queue: DispatcherOutputQueue = queue.Queue()
 
@@ -1043,6 +1069,7 @@ class TestRolloutDispatcher:
     def test_passes_task_spec_and_context(self):
         rollout_fn = MagicMock(return_value=SampleGroup(samples=[]))
         context = MagicMock()
+        context.config.executor_type = ExecutorType.THREAD
         in_q: DispatcherInputQueue = queue.Queue()
         out_q: DispatcherOutputQueue = queue.Queue()
 
@@ -1065,3 +1092,47 @@ class TestRolloutDispatcher:
         dispatcher.join(timeout=2)
 
         rollout_fn.assert_called_once_with(task=spec, context=context)
+
+    def test_uses_thread_pool_executor_for_thread_executor_type(self):
+        dispatcher, in_q, out_q = self._make_dispatcher()
+
+        try:
+            assert isinstance(dispatcher._executor, concurrent.futures.ThreadPoolExecutor)
+        finally:
+            dispatcher._executor.shutdown(wait=False, cancel_futures=True)
+
+    def test_uses_process_pool_executor_for_process_executor_type(self):
+        dispatcher, in_q, out_q = self._make_dispatcher(executor_type=ExecutorType.PROCESS)
+
+        try:
+            assert isinstance(dispatcher._executor, concurrent.futures.ProcessPoolExecutor)
+        finally:
+            dispatcher._executor.shutdown(wait=False, cancel_futures=True)
+
+    def test_process_executor_posts_result(self):
+        dispatcher, in_q, out_q = self._make_dispatcher(
+            rollout_fn=_process_smoke_rollout_fn,
+            raise_on_rollout_failure=True,
+            concurrent_workers=1,
+            executor_type=ExecutorType.PROCESS,
+            context=RolloutContext(
+                config=_make_config(executor_type=ExecutorType.PROCESS),
+                api_client=TokenFactory(api_key="test-key"),
+            )
+        )
+
+        dispatcher.start()
+        try:
+            task = Task(spec=ProcessSmokeTask(question="hello"), starting_inference_version=0)
+            in_q.put(task)
+            result = out_q.get(timeout=10)
+        finally:
+            dispatcher.stop()
+            dispatcher.join(timeout=5)
+
+        assert isinstance(result, RolloutResult)
+        assert result.task.id == task.id
+        assert result.sample_group.samples[0].debug_info == {
+            "question": "hello",
+            "executor_type": "process",
+        }
