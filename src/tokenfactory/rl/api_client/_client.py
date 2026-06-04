@@ -42,6 +42,7 @@ class TokenFactory:
         base_url: str | None = None,
         api_key: str | None = None,
         *,
+        httpx_client: httpx.Client | None = None,
         httpx_client_factory: Callable[[], httpx.Client] | None = None,
         max_retries: int = 3,
         tenacity_retry_wait: wait_base | None = None,
@@ -62,6 +63,12 @@ class TokenFactory:
 
         self._httpx_client_factory = httpx_client_factory or default_httpx_client_factory
         self._httpx_client = self._httpx_client_factory()
+
+    @property
+    def httpx_client(self) -> httpx.Client:
+        if self._httpx_client is None:
+            self._httpx_client = self._httpx_client_factory()
+        return self._httpx_client
 
     @cached_property
     def v1alpha1(self) -> V1Alpha1:
@@ -92,7 +99,7 @@ class TokenFactory:
         )
         def _do_request() -> httpx.Response:
             headers = self._build_headers() | kwargs.pop("headers", {})
-            response = self._httpx_client.request(method, url, headers=headers, **kwargs)
+            response = self.httpx_client.request(method, url, headers=headers, **kwargs)
             _raise_errors(response)
             return response
 
@@ -100,6 +107,14 @@ class TokenFactory:
 
     def close(self) -> None:
         self._httpx_client.close()
+
+    def __getstate__(self) -> dict[str, object]:
+        state = self.__dict__.copy()
+        state["_httpx_client"] = None
+        return state
+
+    def __setstate__(self, state: dict[str, object]) -> None:
+        self.__dict__.update(state)
 
     def __enter__(self) -> Self:
         return self
