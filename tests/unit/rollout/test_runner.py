@@ -35,11 +35,6 @@ class FakeTaskSpec:
     question: str = "test"
 
 
-@dataclass
-class ProcessSmokeTask:
-    question: str
-
-
 class FakeDataset:
     def sample(self, n_tasks: int) -> list[FakeTaskSpec]:
         return [FakeTaskSpec(question=f"q{i}") for i in range(n_tasks)]
@@ -71,7 +66,7 @@ def _make_sample(
     )
 
 
-def _process_smoke_rollout_fn(task: ProcessSmokeTask, context: RolloutContext) -> SampleGroup:
+def _process_smoke_rollout_fn(task: FakeTaskSpec, context: RolloutContext) -> SampleGroup:
     return SampleGroup(
         samples=[
             Sample(
@@ -890,9 +885,10 @@ class TestRolloutDispatcher:
         num_rollout_retries=0,
         raise_on_rollout_failure=False,
         concurrent_workers=2,
-        executor_type: str = ExecutorType.THREAD,
-        context: RolloutContext = MagicMock()
+        executor_type: Literal[ExecutorType.THREAD, ExecutorType.PROCESS] = ExecutorType.THREAD,
+        context: RolloutContext | None = None,
     ) -> tuple[RolloutDispatcher[FakeTaskSpec], DispatcherInputQueue, DispatcherOutputQueue]:
+        context = context or MagicMock()
         context.config.executor_type = executor_type
         input_queue: DispatcherInputQueue = queue.Queue()
         output_queue: DispatcherOutputQueue = queue.Queue()
@@ -1118,12 +1114,12 @@ class TestRolloutDispatcher:
             context=RolloutContext(
                 config=_make_config(executor_type=ExecutorType.PROCESS),
                 api_client=TokenFactory(api_key="test-key"),
-            )
+            ),
         )
 
         dispatcher.start()
         try:
-            task = Task(spec=ProcessSmokeTask(question="hello"), starting_inference_version=0)
+            task = Task(spec=FakeTaskSpec(question="hello"), starting_inference_version=0)
             in_q.put(task)
             result = out_q.get(timeout=10)
         finally:

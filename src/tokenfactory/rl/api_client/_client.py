@@ -42,7 +42,6 @@ class TokenFactory:
         base_url: str | None = None,
         api_key: str | None = None,
         *,
-        httpx_client: httpx.Client | None = None,
         httpx_client_factory: Callable[[], httpx.Client] | None = None,
         max_retries: int = 3,
         tenacity_retry_wait: wait_base | None = None,
