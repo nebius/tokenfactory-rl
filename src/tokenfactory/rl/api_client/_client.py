@@ -32,10 +32,6 @@ API_KEY_ENV_VAR = f"{ENV_PREFIX}API_KEY"
 DEFAULT_BASE_URL = "https://api.tokenfactory.nebius.com"
 
 
-def default_httpx_client_factory() -> httpx.Client:
-    return httpx.Client()
-
-
 class TokenFactory:
     def __init__(
         self,
@@ -60,7 +56,7 @@ class TokenFactory:
         self._max_retries = max_retries
         self._tenacity_retry_wait = tenacity_retry_wait
 
-        self._httpx_client_factory = httpx_client_factory or default_httpx_client_factory
+        self._httpx_client_factory = httpx_client_factory or httpx.Client
         self._httpx_client = self._httpx_client_factory()
 
     @property
@@ -105,7 +101,8 @@ class TokenFactory:
         return _do_request()
 
     def close(self) -> None:
-        self._httpx_client.close()
+        if self._httpx_client is not None:
+            self._httpx_client.close()
 
     def __getstate__(self) -> dict[str, object]:
         state = self.__dict__.copy()

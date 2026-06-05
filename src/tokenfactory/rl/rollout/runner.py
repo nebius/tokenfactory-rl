@@ -273,12 +273,12 @@ class RolloutDispatcher(threading.Thread, Generic[TaskSpec_contra]):
         self._stop_event = threading.Event()
         self._concurrent_workers = concurrent_workers
 
-        if context.config.executor_type.lower() == ExecutorType.THREAD.lower():
+        if context.config.executor_type == ExecutorType.THREAD:
             self._executor = concurrent.futures.ThreadPoolExecutor(max_workers=concurrent_workers)
-        elif context.config.executor_type.lower() == ExecutorType.PROCESS.lower():
+        elif context.config.executor_type == ExecutorType.PROCESS:
             self._executor = concurrent.futures.ProcessPoolExecutor(max_workers=concurrent_workers)
         else:
-            self._executor = concurrent.futures.ThreadPoolExecutor(max_workers=concurrent_workers)
+            raise ValueError("Unsupported executor_type")
 
         self._num_rollout_retries = num_rollout_retries
         self._raise_on_rollout_failure = raise_on_rollout_failure

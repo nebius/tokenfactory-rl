@@ -885,7 +885,7 @@ class TestRolloutDispatcher:
         num_rollout_retries=0,
         raise_on_rollout_failure=False,
         concurrent_workers=2,
-        executor_type: Literal[ExecutorType.THREAD, ExecutorType.PROCESS] = ExecutorType.THREAD,
+        executor_type: ExecutorType = ExecutorType.THREAD,
         context: RolloutContext | None = None,
     ) -> tuple[RolloutDispatcher[FakeTaskSpec], DispatcherInputQueue, DispatcherOutputQueue]:
         context = context or MagicMock()

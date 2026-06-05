@@ -1,5 +1,4 @@
 from enum import StrEnum
-from typing import Literal
 
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
@@ -15,7 +14,7 @@ class RolloutConfig(BaseSettings):
     job_id: str
     model_name: str
     max_concurrency: int = 32
-    executor_type: Literal[ExecutorType.THREAD, ExecutorType.PROCESS] = ExecutorType.THREAD
+    executor_type: ExecutorType = ExecutorType.THREAD
 
     num_batches: int | None = None
     batch_size: int
