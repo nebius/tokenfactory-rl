@@ -10,7 +10,7 @@ from typing import Generic, Protocol, TypeVar
 
 from tokenfactory.rl.api_client import NotFoundError, TokenFactory
 from tokenfactory.rl.api_client.models import Sample as APISample
-from tokenfactory.rl.rollout.config import RolloutConfig
+from tokenfactory.rl.rollout.config import ExecutorType, RolloutConfig
 from tokenfactory.rl.rollout.context import RolloutContext
 from tokenfactory.rl.rollout.dataset import DatasetProtocol
 from tokenfactory.rl.rollout.exceptions import JobInitializationTimeout
@@ -272,7 +272,14 @@ class RolloutDispatcher(threading.Thread, Generic[TaskSpec_contra]):
         self._output_queue = output_queue
         self._stop_event = threading.Event()
         self._concurrent_workers = concurrent_workers
-        self._executor = concurrent.futures.ThreadPoolExecutor(max_workers=concurrent_workers)
+
+        if context.config.executor_type == ExecutorType.THREAD:
+            self._executor = concurrent.futures.ThreadPoolExecutor(max_workers=concurrent_workers)
+        elif context.config.executor_type == ExecutorType.PROCESS:
+            self._executor = concurrent.futures.ProcessPoolExecutor(max_workers=concurrent_workers)
+        else:
+            raise ValueError("Unsupported executor_type")
+
         self._num_rollout_retries = num_rollout_retries
         self._raise_on_rollout_failure = raise_on_rollout_failure
 

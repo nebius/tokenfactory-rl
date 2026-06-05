@@ -1,6 +1,11 @@
-from typing import Literal
-
 from pydantic_settings import BaseSettings, SettingsConfigDict
+
+from tokenfactory.rl._compat import StrEnum
+
+
+class ExecutorType(StrEnum):
+    THREAD = "thread"
+    PROCESS = "process"
 
 
 class RolloutConfig(BaseSettings):
@@ -9,7 +14,7 @@ class RolloutConfig(BaseSettings):
     job_id: str
     model_name: str
     max_concurrency: int = 32
-    executor_type: Literal["thread", "process"] = "thread"
+    executor_type: ExecutorType = ExecutorType.THREAD
 
     num_batches: int | None = None
     batch_size: int

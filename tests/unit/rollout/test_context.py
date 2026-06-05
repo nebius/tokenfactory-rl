@@ -3,7 +3,7 @@ from unittest.mock import MagicMock
 
 import pytest
 
-from tokenfactory.rl.rollout.config import RolloutConfig
+from tokenfactory.rl.rollout.config import ExecutorType, RolloutConfig
 from tokenfactory.rl.rollout.context import RolloutContext
 
 
@@ -18,7 +18,7 @@ def _make_config(
     job_id: str = "ctx-job",
     model_name: str = "test-model",
     max_concurrency: int = 32,
-    executor_type: Literal["thread", "process"] = "thread",
+    executor_type: Literal[ExecutorType.THREAD, ExecutorType.PROCESS] = ExecutorType.THREAD,
     num_batches: int | None = None,
     batch_size: int = 4,
     num_samples_per_task: int = 1,

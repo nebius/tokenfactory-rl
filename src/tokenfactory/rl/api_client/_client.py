@@ -20,9 +20,10 @@ from tokenfactory.rl.api_client.resources.v1alpha1 import V1Alpha1
 
 
 if TYPE_CHECKING:
+    from collections.abc import Callable
+
     from tenacity.wait import wait_base
     from typing_extensions import Self
-
 
 ENV_PREFIX = "TOKENFACTORY_"
 BASE_URL_ENV_VAR = f"{ENV_PREFIX}BASE_URL"
@@ -37,7 +38,7 @@ class TokenFactory:
         base_url: str | None = None,
         api_key: str | None = None,
         *,
-        httpx_client: httpx.Client | None = None,
+        httpx_client_factory: Callable[[], httpx.Client] | None = None,
         max_retries: int = 3,
         tenacity_retry_wait: wait_base | None = None,
     ) -> None:
@@ -52,14 +53,17 @@ class TokenFactory:
         if api_key is None:
             raise MissingAPIKeyError(f"Missing API key, set env var {API_KEY_ENV_VAR} or pass to constructor")
         self._api_key = api_key
-
-        if httpx_client is not None:
-            self._httpx_client = httpx_client
-        else:
-            self._httpx_client = httpx.Client()
-
         self._max_retries = max_retries
         self._tenacity_retry_wait = tenacity_retry_wait
+
+        self._httpx_client_factory = httpx_client_factory or httpx.Client
+        self._httpx_client = self._httpx_client_factory()
+
+    @property
+    def httpx_client(self) -> httpx.Client:
+        if self._httpx_client is None:
+            self._httpx_client = self._httpx_client_factory()
+        return self._httpx_client
 
     @cached_property
     def v1alpha1(self) -> V1Alpha1:
@@ -90,14 +94,23 @@ class TokenFactory:
         )
         def _do_request() -> httpx.Response:
             headers = self._build_headers() | kwargs.pop("headers", {})
-            response = self._httpx_client.request(method, url, headers=headers, **kwargs)
+            response = self.httpx_client.request(method, url, headers=headers, **kwargs)
             _raise_errors(response)
             return response
 
         return _do_request()
 
     def close(self) -> None:
-        self._httpx_client.close()
+        if self._httpx_client is not None:
+            self._httpx_client.close()
+
+    def __getstate__(self) -> dict[str, object]:
+        state = self.__dict__.copy()
+        state["_httpx_client"] = None
+        return state
+
+    def __setstate__(self, state: dict[str, object]) -> None:
+        self.__dict__.update(state)
 
     def __enter__(self) -> Self:
         return self
