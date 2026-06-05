@@ -1,6 +1,6 @@
-from enum import StrEnum
-
 from pydantic_settings import BaseSettings, SettingsConfigDict
+
+from tokenfactory.rl._compat import StrEnum
 
 
 class ExecutorType(StrEnum):
