@@ -3,18 +3,22 @@ from types import SimpleNamespace
 from unittest.mock import MagicMock, call
 
 import pytest
+from click.testing import CliRunner
 
 from tokenfactory.rl.examples.math import (
     DEFAULT_DATASET_PATH,
+    DEFAULT_DATASET_SPLIT,
     MathDAPODataset,
     MathExampleConfig,
     MathTask,
     build_messages,
     check_answer,
     check_format,
+    main,
     reward_fn,
     roll_out_task,
 )
+from tokenfactory.rl.rollout import RolloutConfig
 
 
 def _make_completion(content: str) -> SimpleNamespace:
@@ -28,6 +32,14 @@ def _parse(text: str) -> list[str]:
 _verify = eq
 NUM_DATASET_ROWS = 2
 NUM_ROLLOUT_SAMPLES = 3
+CLI_JOB_ID = "job-test"
+CLI_MODEL_NAME = "test-model"
+CLI_NUM_BATCHES = 7
+CLI_ALLOWED_STALENESS = 2
+CLI_JOB_INIT_TIMEOUT = 45
+CLI_BATCH_SIZE = 12
+CLI_NUM_SAMPLES_PER_TASK = 4
+DEFAULT_MAX_CONCURRENCY = 32
 
 
 def test_dataset_loads_math_dapo_rows():
@@ -178,3 +190,90 @@ def test_roll_out_task_rejects_zero_variance_groups(monkeypatch: pytest.MonkeyPa
 
     assert result.is_rejected
     assert result.samples == []
+
+
+def test_main_builds_runner_from_cli_options(monkeypatch: pytest.MonkeyPatch):
+    captured: dict[str, object] = {}
+    fake_api_client = object()
+    fake_dataset = object()
+
+    class FakeRunner:
+        def __init__(
+            self,
+            api_client: object,
+            config: RolloutConfig,
+            dataset: object,
+            rollout_fn: object,
+        ) -> None:
+            captured["api_client"] = api_client
+            captured["config"] = config
+            captured["dataset"] = dataset
+            captured["rollout_fn"] = rollout_fn
+
+        @staticmethod
+        def run() -> None:
+            captured["ran"] = True
+
+    def fake_token_factory() -> object:
+        return fake_api_client
+
+    def fake_dataset_factory(
+        *,
+        dataset_path: str,
+        split: str,
+        seed: int | None,
+        with_replacement: bool,
+    ) -> object:
+        captured["dataset_args"] = {
+            "dataset_path": dataset_path,
+            "split": split,
+            "seed": seed,
+            "with_replacement": with_replacement,
+        }
+        return fake_dataset
+
+    monkeypatch.setattr("tokenfactory.rl.examples.math.example.TokenFactory", fake_token_factory)
+    monkeypatch.setattr("tokenfactory.rl.examples.math.example.RolloutRunner", FakeRunner)
+    monkeypatch.setattr("tokenfactory.rl.examples.math.example.MathDAPODataset", fake_dataset_factory)
+
+    result = CliRunner().invoke(
+        main,
+        [
+            "--job-id",
+            CLI_JOB_ID,
+            "--model-name",
+            CLI_MODEL_NAME,
+            "--num-batches",
+            str(CLI_NUM_BATCHES),
+            "--allowed-staleness",
+            str(CLI_ALLOWED_STALENESS),
+            "--job-init-timeout",
+            str(CLI_JOB_INIT_TIMEOUT),
+            "--batch-size",
+            str(CLI_BATCH_SIZE),
+            "--num-samples-per-task",
+            str(CLI_NUM_SAMPLES_PER_TASK),
+        ],
+    )
+
+    assert result.exit_code == 0, result.output
+    assert captured["api_client"] is fake_api_client
+    assert captured["dataset"] is fake_dataset
+    assert captured["ran"] is True
+    assert captured["dataset_args"] == {
+        "dataset_path": DEFAULT_DATASET_PATH,
+        "split": DEFAULT_DATASET_SPLIT,
+        "seed": 0,
+        "with_replacement": True,
+    }
+
+    config = captured["config"]
+    assert isinstance(config, RolloutConfig)
+    assert config.job_id == CLI_JOB_ID
+    assert config.model_name == CLI_MODEL_NAME
+    assert config.max_concurrency == DEFAULT_MAX_CONCURRENCY
+    assert config.num_batches == CLI_NUM_BATCHES
+    assert config.allowed_staleness == CLI_ALLOWED_STALENESS
+    assert config.job_init_timeout == CLI_JOB_INIT_TIMEOUT
+    assert config.batch_size == CLI_BATCH_SIZE
+    assert config.num_samples_per_task == CLI_NUM_SAMPLES_PER_TASK

@@ -10,6 +10,7 @@ from operator import itemgetter
 from statistics import mean, pstdev
 from typing import Any, cast
 
+import click
 from pydantic_settings import BaseSettings
 
 from tokenfactory.rl.api_client import TokenFactory
@@ -306,21 +307,50 @@ def _task_metadata(task: MathTask) -> dict[str, str]:
     return metadata
 
 
-def main():
+@click.command()
+@click.option("--job-id", required=True, help="TokenFactory fine-tuning job ID.")
+@click.option("--model-name", required=True, help="Model name passed to the job inference endpoint.")
+@click.option("--num-batches", type=int, default=1000, show_default=True, help="Number of batches to fill.")
+@click.option("--allowed-staleness", type=int, default=0, show_default=True, help="Allowed inference-version lag.")
+@click.option(
+    "--job-init-timeout",
+    type=int,
+    default=600,
+    show_default=True,
+    help="Seconds to wait for the job runtime status endpoint during startup.",
+)
+@click.option("--batch-size", type=int, default=128, show_default=True, help="Number of samples per training batch.")
+@click.option(
+    "--num-samples-per-task",
+    type=int,
+    default=4,
+    show_default=True,
+    help="Number of completions sampled for each math problem.",
+)
+def main(
+    job_id: str,
+    model_name: str,
+    num_batches: int,
+    allowed_staleness: int,
+    job_init_timeout: int,
+    batch_size: int,
+    num_samples_per_task: int,
+) -> None:
     logging.basicConfig(level=logging.DEBUG)
     my_config = MathExampleConfig()
 
     runner = RolloutRunner(
         api_client=TokenFactory(),
         config=RolloutConfig(
-            job_id="example-job-id",
-            model_name="Qwen/Qwen2.5-1.5B-Instruct",
+            job_id=job_id,
+            model_name=model_name,
             max_concurrency=32,
             executor_type=ExecutorType.THREAD,
-            allowed_staleness=0,
-            num_batches=1000,
-            batch_size=128,
-            num_samples_per_task=4,
+            allowed_staleness=allowed_staleness,
+            job_init_timeout=job_init_timeout,
+            num_batches=num_batches,
+            batch_size=batch_size,
+            num_samples_per_task=num_samples_per_task,
         ),
         dataset=MathDAPODataset(
             dataset_path=my_config.dataset_path,
