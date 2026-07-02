@@ -1,0 +1,7 @@
+project:
+  name: tokenfactory-rl-math-example
+  requires-python: ">=3.10,<3.15"
+  dependencies:
+    - tokenfactory-rl
+    - datasets>=4.8.4,<5
+    - math-verify>=0.8.0,<1
