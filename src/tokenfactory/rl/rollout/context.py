@@ -24,7 +24,7 @@ class RolloutContext:
 
     @cached_property
     def openai_endpoint(self) -> str:
-        return self._api_client.v1alpha1.fine_tuning.jobs.inference.openai.v1.endpoint(job_id=self._config.job_id)
+        return self._api_client.v1alpha1.fine_tuning.jobs.endpoint(job_id=self._config.job_id) + "/inference/openai/v1"
 
     @cached_property
     def openai_client(self) -> OpenAI:

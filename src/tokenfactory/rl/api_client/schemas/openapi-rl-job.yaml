@@ -1,0 +1,293 @@
+openapi: 3.1.0
+info:
+  title: Token Factory RL Job API
+  version: 0.1.0
+paths:
+  /v1alpha1/fine_tuning/jobs/{job_id}/batches/{batch_index}:
+    get:
+      tags:
+      - batches
+      summary: Get Batch
+      operationId: get_batch_v1alpha1_fine_tuning_jobs__job_id__batches__batch_index__get
+      parameters:
+      - name: job_id
+        in: path
+        required: true
+        schema:
+          type: string
+          title: Job Id
+      - name: batch_index
+        in: path
+        required: true
+        schema:
+          type: integer
+          title: Batch Index
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Batch'
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+  /v1alpha1/fine_tuning/jobs/{job_id}/batches:
+    post:
+      tags:
+      - batches
+      summary: Create Batch
+      operationId: create_batch_v1alpha1_fine_tuning_jobs__job_id__batches_post
+      parameters:
+      - name: job_id
+        in: path
+        required: true
+        schema:
+          type: string
+          title: Job Id
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateBatchRequest'
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Batch'
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+  /v1alpha1/fine_tuning/jobs/{job_id}/batches/{batch_index}/samples:
+    post:
+      tags:
+      - samples
+      summary: Upload Samples
+      operationId: upload_samples_v1alpha1_fine_tuning_jobs__job_id__batches__batch_index__samples_post
+      parameters:
+      - name: job_id
+        in: path
+        required: true
+        schema:
+          type: string
+          title: Job Id
+      - name: batch_index
+        in: path
+        required: true
+        schema:
+          type: integer
+          title: Batch Index
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UploadSamplesRequest'
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Batch'
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+  /v1alpha1/fine_tuning/jobs/{job_id}/status:
+    get:
+      tags:
+      - job
+      summary: Get Status
+      operationId: get_status_v1alpha1_fine_tuning_jobs__job_id__status_get
+      parameters:
+      - name: job_id
+        in: path
+        required: true
+        schema:
+          type: string
+          title: Job Id
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/JobStatus'
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+components:
+  schemas:
+    Batch:
+      properties:
+        object:
+          type: string
+          const: fine_tuning.batch
+          title: Object
+          default: fine_tuning.batch
+        index:
+          type: integer
+          minimum: 0.0
+          title: Index
+        status:
+          $ref: '#/components/schemas/BatchStatus'
+          default: filling
+        sample_count:
+          type: integer
+          minimum: 0.0
+          title: Sample Count
+          default: 0
+      type: object
+      required:
+      - index
+      title: Batch
+    BatchStatus:
+      type: string
+      enum:
+      - filling
+      - filled
+      title: BatchStatus
+    CreateBatchRequest:
+      properties:
+        index:
+          type: integer
+          minimum: 0.0
+          title: Index
+      type: object
+      required:
+      - index
+      title: CreateBatchRequest
+    HTTPValidationError:
+      properties:
+        detail:
+          items:
+            $ref: '#/components/schemas/ValidationError'
+          type: array
+          title: Detail
+      type: object
+      title: HTTPValidationError
+    JobStatus:
+      properties:
+        object:
+          type: string
+          const: fine_tuning.job.status
+          title: Object
+          default: fine_tuning.job.status
+        inference_version:
+          anyOf:
+          - type: integer
+          - type: 'null'
+          title: Inference Version
+        total_batches:
+          anyOf:
+          - type: integer
+          - type: 'null'
+          title: Total Batches
+        filled_batches:
+          type: integer
+          title: Filled Batches
+      type: object
+      required:
+      - inference_version
+      - total_batches
+      - filled_batches
+      title: JobStatus
+    Sample:
+      properties:
+        object:
+          type: string
+          const: fine_tuning.rl_sample
+          title: Object
+          default: fine_tuning.rl_sample
+        id:
+          type: string
+          title: Id
+        token_ids:
+          items:
+            type: integer
+          type: array
+          title: Token Ids
+        logprobs:
+          items:
+            type: number
+          type: array
+          title: Logprobs
+        mask:
+          items:
+            type: integer
+          type: array
+          title: Mask
+        normalized_reward:
+          type: number
+          title: Normalized Reward
+        metadata:
+          additionalProperties:
+            type: string
+          type: object
+          title: Metadata
+        debug_info:
+          additionalProperties: true
+          type: object
+          title: Debug Info
+      type: object
+      required:
+      - id
+      - token_ids
+      - logprobs
+      - mask
+      - normalized_reward
+      - metadata
+      - debug_info
+      title: Sample
+    UploadSamplesRequest:
+      properties:
+        samples:
+          items:
+            $ref: '#/components/schemas/Sample'
+          type: array
+          title: Samples
+      type: object
+      required:
+      - samples
+      title: UploadSamplesRequest
+    ValidationError:
+      properties:
+        loc:
+          items:
+            anyOf:
+            - type: string
+            - type: integer
+          type: array
+          title: Location
+        msg:
+          type: string
+          title: Message
+        type:
+          type: string
+          title: Error Type
+        input:
+          title: Input
+        ctx:
+          type: object
+          title: Context
+      type: object
+      required:
+      - loc
+      - msg
+      - type
+      title: ValidationError
