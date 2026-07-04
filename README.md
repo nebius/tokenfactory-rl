@@ -212,8 +212,6 @@ client = TokenFactory()
 
 status = client.v1alpha1.fine_tuning.jobs.get_runtime_status(job_id="job-123")
 batch = client.v1alpha1.fine_tuning.jobs.batches.get(job_id="job-123", batch_index=0)
-
-models = client.v1alpha1.fine_tuning.jobs.inference.openai.v1.models(job_id="job-123")
 ```
 
 The rollout context exposes the job's OpenAI-compatible inference endpoint:
@@ -250,7 +248,7 @@ Build the package:
 uv build
 ```
 
-The generated API models live in `src/tokenfactory/rl/api_client/models.py`; see `src/tokenfactory/rl/api_client/README.md` for regeneration notes.
+The generated API models live in `src/tokenfactory/rl/api_client/models`; see `src/tokenfactory/rl/api_client/schemas/README.md` for regeneration notes.
 
 ## Project Layout
 
