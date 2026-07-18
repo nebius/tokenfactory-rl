@@ -310,6 +310,20 @@ class TestWaitForJobInitialization:
         assert isinstance(exc_info.value.__cause__, ConnectionError)
         assert exc_info.value.last_exception is exc_info.value.__cause__
 
+    def test_initialization_failure_shuts_down_dispatcher_executor(self):
+        client = _make_api_client()
+        client.v1alpha1.fine_tuning.jobs.get_runtime_status.side_effect = ConnectionError("network error")
+        runner = _make_runner(
+            api_client=client,
+            config=_make_config(job_init_timeout=0, status_polling_interval=0.01),
+        )
+
+        with pytest.raises(JobInitializationTimeout):
+            runner.run()
+
+        with pytest.raises(RuntimeError, match="shutdown"):
+            runner._rollout_dispatcher._executor.submit(lambda: None)
+
 
 # ===========================================================================
 # RolloutRunner._process_rollout_result
@@ -600,6 +614,51 @@ class TestRunLoop:
 
         with pytest.raises(ValueError, match="boom"):
             self._run_with_events(runner, events)
+
+    def test_rollout_exception_stops_workers(self):
+        runner = _make_runner()
+        runner._scheduler = MagicMock()
+        job_status_tracker = MagicMock()
+        rollout_dispatcher = MagicMock()
+        runner._job_status_tracker = job_status_tracker
+        runner._rollout_dispatcher = rollout_dispatcher
+        error = ValueError("boom")
+        runner._input_queue.put(RolloutException(exception=error, traceback="traceback text"))
+
+        with pytest.raises(ValueError, match="boom"):
+            runner.run()
+
+        job_status_tracker.stop.assert_called_once_with()
+        rollout_dispatcher.stop.assert_called_once_with()
+        job_status_tracker.join.assert_called_once_with()
+        rollout_dispatcher.join.assert_called_once_with()
+
+    def test_submit_failure_stops_workers(self):
+        client = _make_api_client()
+        client.v1alpha1.fine_tuning.jobs.batches.submit_samples.side_effect = RuntimeError("submit failed")
+        runner = _make_runner(api_client=client)
+        job_status_tracker = MagicMock()
+        rollout_dispatcher = MagicMock()
+        runner._job_status_tracker = job_status_tracker
+        runner._rollout_dispatcher = rollout_dispatcher
+
+        mock_scheduler = MagicMock()
+        mock_scheduler.get_num_rollouts_to_spawn.return_value = 0
+        mock_scheduler.inference_version = 0
+        mock_scheduler.get_ready_samples.return_value = [_make_sample()]
+        mock_scheduler.is_all_finished = False
+        runner._scheduler = mock_scheduler
+
+        task = Task(id=TaskID("task-fail-submit"), spec=FakeTaskSpec(), starting_inference_version=0)
+        runner._input_queue.put(RolloutResult(task=task, sample_group=SampleGroup(samples=[_make_sample()])))
+
+        with pytest.raises(RuntimeError, match="submit failed"):
+            runner.run()
+
+        job_status_tracker.stop.assert_called_once_with()
+        rollout_dispatcher.stop.assert_called_once_with()
+        job_status_tracker.join.assert_called_once_with()
+        rollout_dispatcher.join.assert_called_once_with()
 
     def test_rejected_result_does_not_submit(self):
         config = _make_config(batch_size=2, num_batches=1, num_samples_per_task=1)
@@ -1061,6 +1120,14 @@ class TestRolloutDispatcher:
         dispatcher.stop()
         dispatcher.join(timeout=2)
         assert not dispatcher.is_alive()
+
+    def test_stop_before_start_shuts_down_executor(self):
+        dispatcher, in_q, out_q = self._make_dispatcher()
+
+        dispatcher.stop()
+
+        with pytest.raises(RuntimeError, match="shutdown"):
+            dispatcher._executor.submit(lambda: None)
 
     def test_passes_task_spec_and_context(self):
         rollout_fn = MagicMock(return_value=SampleGroup(samples=[]))
