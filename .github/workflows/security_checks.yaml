@@ -1,6 +1,7 @@
 name: Security checks
 
 on:
+  merge_group:
   pull_request:
   release:
   push:
