@@ -1,4 +1,4 @@
-# tokenfactory-rl1
+# tokenfactory-rl
 
 Python utilities for collecting reinforcement fine-tuning rollout data for TokenFactory jobs.
 
