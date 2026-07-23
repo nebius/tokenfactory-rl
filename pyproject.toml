@@ -24,7 +24,7 @@ tests = [
 dev = [
     {include-group = "tests"},
     "ruff~=0.15.13",
-    "ty~=0.0.38",
+    "ty~=0.0.63",
 ]
 dev-security = [
     "semgrep>=1.163.0,<2",
