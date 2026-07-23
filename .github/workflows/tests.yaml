@@ -93,7 +93,7 @@ jobs:
             --resolution lowest
 
           # Useful when diagnosing a lower-bound failure.
-          uv tree
+          uv pip tree
 
       - name: Run pytest with lowest dependencies
         shell: bash
