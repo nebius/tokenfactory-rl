@@ -13,22 +13,22 @@ preview = false
 
 [lint]
 extend-safe-fixes = [
-    "unnecessary-collection-call",    # unnecessary-collection-call
-    "non-augmented-assignment", # non-augmented-assignment
-    "pytest-parametrize-names-wrong-type",   # pytest-parametrize-names-wrong-type
-    "unsorted-dunder-all",  # unsorted-dunder-all
-    "duplicate-isinstance-call",  # duplicate-isinstance-call
-    "if-else-block-instead-of-if-exp",  # if-else-block-instead-of-if-exp
-    "typing-only-third-party-import",   # typing-only-third-party-import
-    "non-pep585-annotation",   # non-pep585-annotation
-    "non-pep604-annotation-union",   # non-pep604-annotation-union
-    "deprecated-import",   # deprecated-import
-    "non-pep604-isinstance",   # non-pep604-isinstance
+    "C408",    # unnecessary-collection-call
+    "PLR6104", # non-augmented-assignment
+    "PT006",   # pytest-parametrize-names-wrong-type
+    "RUF022",  # unsorted-dunder-all
+    "SIM101",  # duplicate-isinstance-call
+    "SIM108",  # if-else-block-instead-of-if-exp
+    "TC002",   # typing-only-third-party-import
+    "UP006",   # non-pep585-annotation
+    "UP007",   # non-pep604-annotation-union
+    "UP035",   # deprecated-import
+    "UP038",   # non-pep604-isinstance
 ]
 extend-unsafe-fixes = [
-    "blanket-type-ignore", # blanket-type-ignore
-    "unused-noqa", # unused-noqa
-    "invalid-rule-code", # invalid-rule-code
+    "PGH003", # blanket-type-ignore
+    "RUF100", # unused-noqa
+    "RUF102", # invalid-rule-code
 ]
 select = [
     "A",     # flake8-builtins
@@ -77,57 +77,57 @@ select = [
 ]
 
 ignore = [
-    "missing-type-kwargs",   # missing-type-kwargs
-    "missing-trailing-comma",   # missing-trailing-comma
-    "undocumented-public-module",     # undocumented-public-module
-    "undocumented-public-class",     # undocumented-public-class
-    "undocumented-public-method",     # undocumented-public-method
-    "undocumented-public-function",     # undocumented-public-function
-    "undocumented-public-package",     # undocumented-public-package
-    "undocumented-public-init",     # undocumented-public-init
-    "incorrect-blank-line-before-class",     # incorrect-blank-line-before-class
-    "missing-blank-line-after-summary",     # missing-blank-line-after-summary
-    "multi-line-summary-second-line",     # multi-line-summary-second-line
-    "import-outside-top-level",  # import-outside-top-level
-    "assert",     # assert
-    "runtime-cast-value",    # runtime-cast-value
-    "raise-vanilla-args",   # raise-vanilla-args
+    "ANN003",   # missing-type-kwargs
+    "COM812",   # missing-trailing-comma
+    "D100",     # undocumented-public-module
+    "D101",     # undocumented-public-class
+    "D102",     # undocumented-public-method
+    "D103",     # undocumented-public-function
+    "D104",     # undocumented-public-package
+    "D107",     # undocumented-public-init
+    "D203",     # incorrect-blank-line-before-class
+    "D205",     # missing-blank-line-after-summary
+    "D213",     # multi-line-summary-second-line
+    "PLC0415",  # import-outside-top-level
+    "S101",     # assert
+    "TC006",    # runtime-cast-value
+    "TRY003",   # raise-vanilla-args
 ]
 
 [lint.per-file-ignores]
 "*" = []
 
 "src/tokenfactory/rl/api_client/models.py" = [
-    "commented-out-code", # commented-out-code
-    "mixed-case-variable-in-class-scope",   # mixed-case-variable-in-class-scope
+    "ERA001", # commented-out-code
+    "N815",   # mixed-case-variable-in-class-scope
 ]
 
 "tests/**" = [
     "D",       # pydocstyleT
     "DOC",     # pydoclint
-    "implicit-namespace-package",  # implicit-namespace-package
+    "INP001",  # implicit-namespace-package
     "PLR",     # efactor-plr
-    "float-equality-comparison",  # float-equality-comparison
+    "RUF069",  # float-equality-comparison
 ]
 
 "tests/**/test_*.py" = [
     "ANN",      # flake8-annotations-ann
-    "unused-unpacked-variable",   # unused-unpacked-variable
-    "assert",     # assert
-    "hardcoded-password-func-arg",     # hardcoded-password-func-arg
+    "RUF059",   # unused-unpacked-variable
+    "S101",     # assert
+    "S106",     # hardcoded-password-func-arg
 ]
 
 
 "!tests/**" = [
-    "import-private-name", # import-private-name
+    "PLC2701", # import-private-name
 ]
 
 "src/tokenfactory/rl/examples/**" = [
-    "suspicious-non-cryptographic-random-usage",   # suspicious-non-cryptographic-random-usage
+    "S311",   # suspicious-non-cryptographic-random-usage
 ]
 
 "!src/tokenfactory/rl/examples/**" = [
-    "import-private-name", # import-private-name
+    "PLC2701", # import-private-name
 ]
 
 
