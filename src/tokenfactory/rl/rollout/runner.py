@@ -9,7 +9,7 @@ from functools import partial
 from typing import Generic, Protocol, TypeVar
 
 from tokenfactory.rl.api_client import NotFoundError, TokenFactory
-from tokenfactory.rl.api_client.models import Sample as APISample
+from tokenfactory.rl.api_client.models.rl_job import Sample as APISample
 from tokenfactory.rl.rollout.config import ExecutorType, RolloutConfig
 from tokenfactory.rl.rollout.context import RolloutContext
 from tokenfactory.rl.rollout.dataset import DatasetProtocol

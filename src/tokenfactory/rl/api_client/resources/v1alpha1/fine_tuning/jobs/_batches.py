@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from tokenfactory.rl.api_client.models import Batch, CreateBatchRequest, Sample, UploadSamplesRequest
+from tokenfactory.rl.api_client.models.rl_job import Batch, CreateBatchRequest, Sample, UploadSamplesRequest
 from tokenfactory.rl.api_client.resources.v1alpha1.fine_tuning.jobs._base import BaseJobIDResource
 
 

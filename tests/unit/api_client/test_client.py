@@ -6,10 +6,22 @@ from unittest.mock import MagicMock
 
 import httpx
 import pytest
+from pydantic import SecretStr
 from pytest_httpx import HTTPXMock
 
 from tokenfactory.rl.api_client import MissingAPIKeyError, NotFoundError, TokenFactory
-from tokenfactory.rl.api_client.models import Batch, BatchStatus, ChatCompletion, Completion, JobStatus, Sample
+from tokenfactory.rl.api_client.models.fine_tuning import (
+    FineTuningJob,
+    FineTuningJobListResponse,
+    ListCheckpointsResponse,
+    ListEventsResponse,
+    WandbConfigRequest,
+    WandbIntegrationRequest,
+)
+from tokenfactory.rl.api_client.models.fine_tuning import (
+    OpenaiTypesFineTuningJobsFineTuningJobCheckpointFineTuningJobCheckpoint as FineTuningJobCheckpoint,
+)
+from tokenfactory.rl.api_client.models.rl_job import Batch, BatchStatus, JobStatus, Sample
 
 
 BASE_URL = "http://test-server"
@@ -26,6 +38,32 @@ def _runtime_status_response(request: httpx.Request, *, inference_version: int =
             "filled_batches": 10,
         },
     )
+
+
+def _fine_tuning_job_json(*, job_id: str = "ftjob-1", status: str = "running") -> dict[str, object]:
+    return {
+        "id": job_id,
+        "created_at": 1700000000,
+        "model": "base-model",
+        "object": "fine_tuning.job",
+        "status": status,
+        "training_file": "file-train",
+    }
+
+
+def _checkpoint_json(*, checkpoint_id: str = "ckpt-1", include_result_files: bool = False) -> dict[str, object]:
+    data: dict[str, object] = {
+        "id": checkpoint_id,
+        "created_at": 1700000100,
+        "fine_tuned_model_checkpoint": "model-checkpoint",
+        "fine_tuning_job_id": "ftjob-1",
+        "metrics": {},
+        "object": "fine_tuning.job.checkpoint",
+        "step_number": 10,
+    }
+    if include_result_files:
+        data["result_files"] = []
+    return data
 
 
 def _picklable_httpx_client_factory() -> httpx.Client:
@@ -80,6 +118,150 @@ def test_resource_hierarchy(client: TokenFactory):
     jobs = client.v1alpha1.fine_tuning.jobs
     assert jobs.endpoint(job_id="job-123") == f"{BASE_URL}/v1alpha1/fine_tuning/jobs/job-123"
     assert jobs.batches.endpoint(job_id="job-123") == f"{BASE_URL}/v1alpha1/fine_tuning/jobs/job-123/batches"
+
+
+def test_v1_resource_hierarchy(client: TokenFactory):
+    jobs = client.v1.fine_tuning.jobs
+    assert client.v1.endpoint() == f"{BASE_URL}/v1"
+    assert client.v1.fine_tuning.endpoint() == f"{BASE_URL}/v1/fine_tuning"
+    assert jobs.bare_endpoint() == f"{BASE_URL}/v1/fine_tuning/jobs"
+    assert jobs.endpoint(job_id="ftjob-1") == f"{BASE_URL}/v1/fine_tuning/jobs/ftjob-1"
+    assert jobs.checkpoints.endpoint(job_id="ftjob-1") == f"{BASE_URL}/v1/fine_tuning/jobs/ftjob-1/checkpoints"
+
+
+def test_v1_fine_tuning_jobs_create(client: TokenFactory, httpx_mock: HTTPXMock):
+    httpx_mock.add_response(
+        method="POST",
+        url=f"{BASE_URL}/v1/fine_tuning/jobs?ai_project_id=project-1",
+        json=_fine_tuning_job_json(),
+    )
+
+    job = client.v1.fine_tuning.jobs.create(
+        model="base-model",
+        training_file="file-train",
+        ai_project_id="project-1",
+        suffix="demo",
+        integrations=[
+            WandbIntegrationRequest(
+                wandb=WandbConfigRequest(project="wandb-proj", api_key=SecretStr("wandb-secret")),
+            ),
+        ],
+    )
+
+    assert isinstance(job, FineTuningJob)
+    assert job.id == "ftjob-1"
+
+    request = httpx_mock.get_request()
+    assert request is not None
+    payload = json.loads(request.content)
+    assert payload["model"] == "base-model"
+    assert payload["training_file"] == "file-train"
+    assert payload["suffix"] == "demo"
+    assert payload["integrations"][0]["type"] == "wandb"
+    assert payload["integrations"][0]["wandb"]["api_key"] == "wandb-secret"
+
+
+def test_v1_fine_tuning_jobs_list(client: TokenFactory, httpx_mock: HTTPXMock):
+    httpx_mock.add_response(
+        method="GET",
+        url=f"{BASE_URL}/v1/fine_tuning/jobs?limit=10&after=ftjob-0&ai_project_id=project-1",
+        json={
+            "object": "list",
+            "data": [_fine_tuning_job_json()],
+            "has_more": False,
+        },
+    )
+
+    jobs = client.v1.fine_tuning.jobs.list(limit=10, after="ftjob-0", ai_project_id="project-1")
+
+    assert isinstance(jobs, FineTuningJobListResponse)
+    assert jobs.data[0].id == "ftjob-1"
+    assert jobs.has_more is False
+
+
+def test_v1_fine_tuning_jobs_get(client: TokenFactory, httpx_mock: HTTPXMock):
+    httpx_mock.add_response(
+        method="GET",
+        url=f"{BASE_URL}/v1/fine_tuning/jobs/ftjob-1",
+        json=_fine_tuning_job_json(),
+    )
+
+    job = client.v1.fine_tuning.jobs.get(job_id="ftjob-1")
+
+    assert isinstance(job, FineTuningJob)
+    assert job.id == "ftjob-1"
+
+
+def test_v1_fine_tuning_jobs_cancel(client: TokenFactory, httpx_mock: HTTPXMock):
+    httpx_mock.add_response(
+        method="POST",
+        url=f"{BASE_URL}/v1/fine_tuning/jobs/ftjob-1/cancel",
+        json=_fine_tuning_job_json(status="cancelled"),
+    )
+
+    job = client.v1.fine_tuning.jobs.cancel(job_id="ftjob-1")
+
+    assert isinstance(job, FineTuningJob)
+    assert job.status.value == "cancelled"
+
+
+def test_v1_fine_tuning_jobs_get_events(client: TokenFactory, httpx_mock: HTTPXMock):
+    httpx_mock.add_response(
+        method="GET",
+        url=f"{BASE_URL}/v1/fine_tuning/jobs/ftjob-1/events?limit=20&after=evt-0",
+        json={
+            "object": "list",
+            "data": [
+                {
+                    "id": "evt-1",
+                    "created_at": 1700000200,
+                    "level": "info",
+                    "message": "started",
+                    "object": "fine_tuning.job.event",
+                },
+            ],
+            "has_more": False,
+        },
+    )
+
+    events = client.v1.fine_tuning.jobs.get_events(job_id="ftjob-1", limit=20, after="evt-0")
+
+    assert isinstance(events, ListEventsResponse)
+    assert events.data[0].id == "evt-1"
+    assert events.data[0].message == "started"
+
+
+def test_v1_fine_tuning_checkpoints_list(client: TokenFactory, httpx_mock: HTTPXMock):
+    httpx_mock.add_response(
+        method="GET",
+        url=f"{BASE_URL}/v1/fine_tuning/jobs/ftjob-1/checkpoints?limit=2&after=ckpt-0",
+        json={
+            "object": "list",
+            "data": [_checkpoint_json(include_result_files=True)],
+            "first_id": "ckpt-1",
+            "last_id": "ckpt-1",
+            "has_more": False,
+        },
+    )
+
+    checkpoints = client.v1.fine_tuning.jobs.checkpoints.list(job_id="ftjob-1", limit=2, after="ckpt-0")
+
+    assert isinstance(checkpoints, ListCheckpointsResponse)
+    assert checkpoints.data[0].id == "ckpt-1"
+    assert checkpoints.first_id == "ckpt-1"
+
+
+def test_v1_fine_tuning_checkpoints_get(client: TokenFactory, httpx_mock: HTTPXMock):
+    httpx_mock.add_response(
+        method="GET",
+        url=f"{BASE_URL}/v1/fine_tuning/jobs/ftjob-1/checkpoints/ckpt-1",
+        json=_checkpoint_json(),
+    )
+
+    checkpoint = client.v1.fine_tuning.jobs.checkpoints.get(job_id="ftjob-1", checkpoint_id="ckpt-1")
+
+    assert isinstance(checkpoint, FineTuningJobCheckpoint)
+    assert checkpoint.id == "ckpt-1"
 
 
 def test_get_runtime_status(client: TokenFactory, httpx_mock: HTTPXMock):
@@ -291,125 +473,3 @@ def test_pickle_roundtrip_recreates_httpx_client_from_factory():
 
     assert isinstance(status, JobStatus)
     assert status.inference_version == 9
-
-
-def test_inference_resource_hierarchy(client: TokenFactory):
-    inference = client.v1alpha1.fine_tuning.jobs.inference
-    assert inference.endpoint(job_id="job-123") == f"{BASE_URL}/v1alpha1/fine_tuning/jobs/job-123/inference"
-    assert (
-        inference.openai.endpoint(job_id="job-123") == f"{BASE_URL}/v1alpha1/fine_tuning/jobs/job-123/inference/openai"
-    )
-    assert (
-        inference.openai.v1.endpoint("job-123") == f"{BASE_URL}/v1alpha1/fine_tuning/jobs/job-123/inference/openai/v1"
-    )
-    assert (
-        inference.openai.v1.chat.endpoint(job_id="job-123")
-        == f"{BASE_URL}/v1alpha1/fine_tuning/jobs/job-123/inference/openai/v1/chat"
-    )
-    assert (
-        inference.openai.v1.completions.endpoint(job_id="job-123")
-        == f"{BASE_URL}/v1alpha1/fine_tuning/jobs/job-123/inference/openai/v1/completions"
-    )
-    assert (
-        inference.openai.v1.chat.completions.endpoint(job_id="job-123")
-        == f"{BASE_URL}/v1alpha1/fine_tuning/jobs/job-123/inference/openai/v1/chat/completions"
-    )
-
-
-def test_chat_completions_create(client: TokenFactory, httpx_mock: HTTPXMock):
-    httpx_mock.add_response(
-        method="POST",
-        url=f"{BASE_URL}/v1alpha1/fine_tuning/jobs/job-123/inference/openai/v1/chat/completions",
-        json={
-            "id": "chatcmpl-abc",
-            "object": "chat.completion",
-            "created": 1700000000,
-            "model": "test-model",
-            "choices": [
-                {
-                    "index": 0,
-                    "message": {"role": "assistant", "content": "Hello!"},
-                    "finish_reason": "stop",
-                }
-            ],
-            "usage": {
-                "prompt_tokens": 10,
-                "completion_tokens": 5,
-                "total_tokens": 15,
-            },
-        },
-    )
-
-    result = client.v1alpha1.fine_tuning.jobs.inference.openai.v1.chat.completions.create(
-        job_id="job-123",
-        model="test-model",
-        messages=[{"role": "user", "content": "Hi"}],
-    )
-
-    assert isinstance(result, ChatCompletion)
-    assert result.id == "chatcmpl-abc"
-    assert result.choices[0].message.content == "Hello!"
-
-    request = httpx_mock.get_request()
-    assert request is not None
-    payload = json.loads(request.content)
-    assert payload["model"] == "test-model"
-    assert payload["messages"] == [{"role": "user", "name": None, "content": "Hi"}]
-
-
-def test_completions_create(client: TokenFactory, httpx_mock: HTTPXMock):
-    httpx_mock.add_response(
-        method="POST",
-        url=f"{BASE_URL}/v1alpha1/fine_tuning/jobs/job-123/inference/openai/v1/completions",
-        json={
-            "id": "cmpl-xyz",
-            "object": "text_completion",
-            "created": 1700000000,
-            "model": "test-model",
-            "choices": [
-                {
-                    "text": "world",
-                    "index": 0,
-                    "finish_reason": "stop",
-                }
-            ],
-            "usage": {
-                "prompt_tokens": 5,
-                "completion_tokens": 1,
-                "total_tokens": 6,
-            },
-        },
-    )
-
-    result = client.v1alpha1.fine_tuning.jobs.inference.openai.v1.completions.create(
-        job_id="job-123",
-        model="test-model",
-        prompt="Hello ",
-    )
-
-    assert isinstance(result, Completion)
-    assert result.id == "cmpl-xyz"
-    assert result.choices[0].text == "world"
-
-    request = httpx_mock.get_request()
-    assert request is not None
-    payload = json.loads(request.content)
-    assert payload["model"] == "test-model"
-    assert payload["prompt"] == "Hello "
-
-
-def test_models_get(client: TokenFactory, httpx_mock: HTTPXMock):
-    httpx_mock.add_response(
-        method="GET",
-        url=f"{BASE_URL}/v1alpha1/fine_tuning/jobs/job-123/inference/openai/v1/models",
-        json={
-            "object": "list",
-            "data": [{"id": "model-1", "object": "model"}],
-        },
-    )
-
-    result = client.v1alpha1.fine_tuning.jobs.inference.openai.v1.models(job_id="job-123")
-
-    assert isinstance(result, dict)
-    assert result["object"] == "list"
-    assert result["data"][0]["id"] == "model-1"

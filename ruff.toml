@@ -7,6 +7,7 @@ exclude = [
     ".git",
     ".venv",
     "venv",
+    "src/tokenfactory/rl/api_client/models/*.py"
 ]
 
 preview = true

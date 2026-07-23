@@ -16,6 +16,7 @@ from tokenfactory.rl.api_client._exceptions import (
     NotFoundError,
     RedirectResponseError,
 )
+from tokenfactory.rl.api_client.resources.v1 import V1
 from tokenfactory.rl.api_client.resources.v1alpha1 import V1Alpha1
 
 
@@ -68,6 +69,10 @@ class TokenFactory:
     @cached_property
     def v1alpha1(self) -> V1Alpha1:
         return V1Alpha1(self)
+
+    @cached_property
+    def v1(self) -> V1:
+        return V1(self)
 
     @property
     def base_url(self) -> str:

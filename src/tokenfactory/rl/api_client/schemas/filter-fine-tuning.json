@@ -1,0 +1,37 @@
+{
+  "allowedTags": [
+      "fine-tuning"
+  ],
+  "pathFilters": {
+    "/v1/fine_tuning/jobs": {
+        "allowedMethods": [
+            "GET", "POST"
+        ]
+    },
+    "/v1/fine_tuning/jobs/{job_id}": {
+        "allowedMethods": ["GET"]
+    },
+    "/v1/fine_tuning/jobs/{job_id}/cancel": {
+        "allowedMethods": ["POST"]
+    },
+    "/v1/fine_tuning/jobs/{job_id}/events": {
+        "allowedMethods": ["GET"]
+    },
+    "/v1/fine_tuning/jobs/{job_id}/checkpoints": {
+        "allowedMethods": ["GET"]
+    },
+    "/v1/fine_tuning/jobs/{job_id}/checkpoints/{checkpoint_id}": {
+        "allowedMethods": ["GET"]
+    },
+    "/v1/fine_tuning/models/spec-draft": {
+      "allowedMethods": []
+    },
+    "/fine_tuning/models/spec-draft": {
+      "allowedMethods": []
+    }
+  },
+  "options": {
+      "removeXOaiMeta": true,
+      "removeUnreferencedSchemas": true
+  }
+}

@@ -1,0 +1,25 @@
+{
+  "allowedTags": [
+      "batches", "samples", "job"
+  ],
+  "pathFilters": {
+    "/v1alpha1/fine_tuning/jobs/{job_id}/batches/{batch_index}": {
+        "allowedMethods": [
+            "GET"
+        ]
+    },
+    "/v1alpha1/fine_tuning/jobs/{job_id}/batches": {
+        "allowedMethods": ["POST"]
+    },
+    "/v1alpha1/fine_tuning/jobs/{job_id}/batches/{batch_index}/samples": {
+        "allowedMethods": ["POST"]
+    },
+    "/v1alpha1/fine_tuning/jobs/{job_id}/status": {
+        "allowedMethods": ["GET"]
+    }
+  },
+  "options": {
+      "removeXOaiMeta": true,
+      "removeUnreferencedSchemas": true
+  }
+}
