@@ -17,9 +17,9 @@ dependencies = [
 tests = [
     "pytest>=9.0.3,<10",
     "pytest-httpx>=0.36.2,<1",
-    "pytest-cov",
-    "pytest-html",
-    "tomli; python_version < '3.11'",
+    "pytest-cov>=7.1.0",
+    "pytest-html>=4.2.0",
+    "tomli>=2.4.1; python_version < '3.11'",
 ]
 dev = [
     {include-group = "tests"},
@@ -27,7 +27,7 @@ dev = [
     "ty~=0.0.63",
 ]
 dev-security = [
-    "semgrep>=1.163.0,<2",
+    "semgrep>=1.163.0",
 ]
 
 [tool.uv]
