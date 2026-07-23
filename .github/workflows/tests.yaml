@@ -66,6 +66,56 @@ jobs:
             report.xml
             report.html
 
+  pytest-lowest:
+    needs: build-matrix
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        python-version: ${{ fromJson(needs.build-matrix.outputs.py_edges) }}
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.python-version }}
+
+      - run: pipx install uv
+
+      - name: Install lowest allowed dependency versions
+        shell: bash
+        run: |
+          # Do not let the regular lockfile pin the normal/highest resolution.
+          rm -f uv.lock
+
+          uv sync \
+            --group tests \
+            --resolution lowest
+
+          # Useful when diagnosing a lower-bound failure.
+          uv tree
+
+      - name: Run pytest with lowest dependencies
+        shell: bash
+        run: |
+          uv run --no-sync pytest \
+            --cov=tokenfactory_rl \
+            --cov-report=xml:coverage.xml \
+            --junitxml=report.xml \
+            --cov-report=term-missing \
+            --html=report.html \
+            -vv
+
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: pytest-lowest-${{ matrix.python-version }}
+          path: |
+            coverage.xml
+            report.xml
+            report.html
+          retention-days: 7
+
   pytest-after-build:
     needs: build-matrix
     runs-on: ubuntu-latest
@@ -127,7 +177,7 @@ jobs:
             report.html
           retention-days: 7
   tests-complete:
-    needs: [pytest, pytest-after-build]
+    needs: [pytest, pytest-lowest, pytest-after-build]
     if: always()
     runs-on: ubuntu-latest
     steps:
