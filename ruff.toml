@@ -92,6 +92,8 @@ ignore = [
     "S101",     # assert
     "TC006",    # runtime-cast-value
     "TRY003",   # raise-vanilla-args
+    "RUF105",  # noqa-comments
+    "RUF201",  # rule-codes-in-selectors
 ]
 
 [lint.per-file-ignores]
@@ -160,3 +162,6 @@ runtime-evaluated-base-classes = [
 
 [lint.pylint]
 max-args = 12
+
+[lint.pydocstyle]
+convention = "google"

@@ -6,28 +6,28 @@ license = { text = "Apache-2.0" }
 readme = "README.md"
 requires-python = ">=3.10, <3.15"
 dependencies = [
-    "openai>=2.37.0,<3",
-    "pydantic>=2.13.4,<3",
-    "pydantic-settings>=2.14.2,<3",
-    "tenacity>=9.1.4,<10",
-    "typing-extensions~=4.16.0"
+    "openai>=2",
+    "pydantic>=2",
+    "pydantic-settings>=2",
+    "tenacity>=9",
+    "typing-extensions>=4"
 ]
 
 [dependency-groups]
 tests = [
     "pytest>=9.0.3,<10",
     "pytest-httpx>=0.36.2,<1",
-    "pytest-cov",
-    "pytest-html",
-    "tomli; python_version < '3.11'",
+    "pytest-cov>=7.1.0",
+    "pytest-html>=4.2.0",
+    "tomli>=2.4.1; python_version < '3.11'",
 ]
 dev = [
     {include-group = "tests"},
-    "ruff~=0.15.13",
+    "ruff~=0.15.22",
     "ty~=0.0.63",
 ]
 dev-security = [
-    "semgrep>=1.163.0,<2",
+    "semgrep>=1.163.0",
 ]
 
 [tool.uv]
