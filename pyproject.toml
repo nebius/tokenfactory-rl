@@ -27,7 +27,7 @@ dev = [
     "ty~=0.0.38",
 ]
 dev-security = [
-    "semgrep",
+    "semgrep>=1.163.0,<2",
 ]
 
 [tool.uv]
