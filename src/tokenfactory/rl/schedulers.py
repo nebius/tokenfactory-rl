@@ -292,7 +292,7 @@ class DroplessRolloutScheduler(BaseRolloutScheduler[TaskID, Sample], Generic[Tas
     def _process_sample_group(self, task_id: TaskID, sample_group: Sequence[Sample], is_pending: bool = False) -> bool:
         """For the current batch, we calculate the number of reserved places
         for samples from trajectories started in different inference versions.
-        """  # noqa:DOC201
+        """
         reserved_places: deque[tuple[int, int]] = deque()
         if len(self._tasks_by_inference_version) > 0:
             inf_versions = self._tasks_by_inference_version.keys()
@@ -312,10 +312,12 @@ class DroplessRolloutScheduler(BaseRolloutScheduler[TaskID, Sample], Generic[Tas
                         break
                     cnt += task_num
                 if ver in self._tasks_by_inference_version:
-                    reserved_places.appendleft((
-                        ver,
-                        len(self._tasks_by_inference_version[ver]) * self._config.num_samples_per_task,
-                    ))
+                    reserved_places.appendleft(
+                        (
+                            ver,
+                            len(self._tasks_by_inference_version[ver]) * self._config.num_samples_per_task,
+                        )
+                    )
 
         allowed_versions = {x[0] for x in reserved_places}
         reserved_places_num = sum(x[1] for x in reserved_places)

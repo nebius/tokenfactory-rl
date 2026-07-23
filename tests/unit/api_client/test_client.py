@@ -1,5 +1,5 @@
 import json
-import pickle  # noqa: S403
+import pickle
 from collections.abc import Callable
 from typing import cast
 from unittest.mock import MagicMock
