@@ -15,7 +15,7 @@ dependencies = [
 
 [dependency-groups]
 tests = [
-    "pytest>=9.0.3,<10",
+    "pytest>=9.1.1,<10",
     "pytest-httpx>=0.36.2,<1",
     "pytest-cov",
     "pytest-html",
