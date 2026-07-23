@@ -1,6 +1,7 @@
 name: pytest
 
 on:
+  merge_group:
   pull_request:
   release:
   push:
