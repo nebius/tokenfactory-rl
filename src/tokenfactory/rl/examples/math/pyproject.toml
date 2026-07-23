@@ -1,0 +1,15 @@
+[project]
+name = "math"
+version = "0.1.0"
+description = "Add your description here"
+readme = "README.md"
+requires-python = ">=3.10"
+dependencies = [
+    "tokenfactory-rl",
+    "click>=8.1.8,<9",
+    "datasets>=4.8.4,<5",
+    "math-verify>=0.8.0,<1"
+]
+
+[tool.uv.sources]
+tokenfactory-rl = { path = "../../../../..", editable = true }

@@ -89,38 +89,46 @@ class RolloutRunner(Generic[TaskSpec_contra]):
         self._batch_n_samples = 0
 
     def run(self):
-        self._wait_for_job_initialization()
+        tracker_started = False
+        dispatcher_started = False
+        try:
+            self._wait_for_job_initialization()
 
-        self._batch_idx, self._batch_n_samples = self._load_initial_state()
-        self._scheduler.set_initial_batch_index(batch_index=self._batch_idx, n_samples=self._batch_n_samples)
+            self._batch_idx, self._batch_n_samples = self._load_initial_state()
+            self._scheduler.set_initial_batch_index(batch_index=self._batch_idx, n_samples=self._batch_n_samples)
 
-        self._job_status_tracker.start()
-        self._rollout_dispatcher.start()
+            self._job_status_tracker.start()
+            tracker_started = True
+            self._rollout_dispatcher.start()
+            dispatcher_started = True
 
-        while True:
-            update = self._input_queue.get()
-            match update:
-                case JobStatusUpdate(inference_version=inference_version):
-                    logger.info(f"Received job status update: inference_version={inference_version}")
-                    self._scheduler.set_inference_version(inference_version=inference_version)
-                    self._spawn_tasks()
-                case RolloutResult(task=task, sample_group=sample_group):
-                    logger.debug(f"Received rollout result for {task.id=} {sample_group.is_rejected=}")
-                    self._process_rollout_result(task=task, sample_group=sample_group)
-                    self._submit_samples()
-                    self._spawn_tasks()
+            while True:
+                update = self._input_queue.get()
+                match update:
+                    case JobStatusUpdate(inference_version=inference_version):
+                        logger.info(f"Received job status update: inference_version={inference_version}")
+                        self._scheduler.set_inference_version(inference_version=inference_version)
+                        self._spawn_tasks()
+                    case RolloutResult(task=task, sample_group=sample_group):
+                        logger.debug(f"Received rollout result for {task.id=} {sample_group.is_rejected=}")
+                        self._process_rollout_result(task=task, sample_group=sample_group)
+                        self._submit_samples()
+                        self._spawn_tasks()
 
-                    if self._scheduler.is_all_finished:
-                        self._job_status_tracker.stop()
-                        self._rollout_dispatcher.stop()
-                        self._job_status_tracker.join()
-                        self._rollout_dispatcher.join()
-                        break
+                        if self._scheduler.is_all_finished:
+                            break
 
-                case RolloutException(exception=e, traceback=tb):
-                    logger.error(f"Received rollout exception: {e}")
-                    logger.error(f"Original traceback:\n{tb}")
-                    raise e
+                    case RolloutException(exception=e, traceback=tb):
+                        logger.error(f"Received rollout exception: {e}")
+                        logger.error(f"Original traceback:\n{tb}")
+                        raise e
+        finally:
+            self._job_status_tracker.stop()
+            self._rollout_dispatcher.stop()
+            if tracker_started:
+                self._job_status_tracker.join()
+            if dispatcher_started:
+                self._rollout_dispatcher.join()
 
     def _wait_for_job_initialization(self) -> None:
         deadline = None if self._config.job_init_timeout is None else time.monotonic() + self._config.job_init_timeout
@@ -320,3 +328,5 @@ class RolloutDispatcher(threading.Thread, Generic[TaskSpec_contra]):
 
     def stop(self):
         self._stop_event.set()
+        if not self.is_alive():
+            self._executor.shutdown(wait=False, cancel_futures=True)
