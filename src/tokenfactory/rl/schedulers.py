@@ -51,7 +51,7 @@ class WithID(Protocol[TaskID]):
 Sample = TypeVar("Sample")
 
 
-class BaseRolloutScheduler(Generic[TaskID, Sample], ABC):  # noqa: PYI059
+class BaseRolloutScheduler(Generic[TaskID, Sample], ABC):  # ruff:ignore[generic-not-last-base-class]
     """Rollout scheduler is responsible for deciding how many new rollouts it is
     possible to spawn at each moment, and for returning completed samples in
     such an order that doesn't break constraints of a scheduler.
@@ -292,6 +292,10 @@ class DroplessRolloutScheduler(BaseRolloutScheduler[TaskID, Sample], Generic[Tas
     def _process_sample_group(self, task_id: TaskID, sample_group: Sequence[Sample], is_pending: bool = False) -> bool:
         """For the current batch, we calculate the number of reserved places
         for samples from trajectories started in different inference versions.
+
+        Returns:
+            True if samples were added to the list `self._ready_samples`, that is, to the current batch.
+            False if samples were added to the heap queue `self._pending_sample_groups` for pending samples.
         """
         reserved_places: deque[tuple[int, int]] = deque()
         if len(self._tasks_by_inference_version) > 0:
@@ -312,12 +316,10 @@ class DroplessRolloutScheduler(BaseRolloutScheduler[TaskID, Sample], Generic[Tas
                         break
                     cnt += task_num
                 if ver in self._tasks_by_inference_version:
-                    reserved_places.appendleft(
-                        (
-                            ver,
-                            len(self._tasks_by_inference_version[ver]) * self._config.num_samples_per_task,
-                        )
-                    )
+                    reserved_places.appendleft((
+                        ver,
+                        len(self._tasks_by_inference_version[ver]) * self._config.num_samples_per_task,
+                    ))
 
         allowed_versions = {x[0] for x in reserved_places}
         reserved_places_num = sum(x[1] for x in reserved_places)

@@ -9,7 +9,7 @@ exclude = [
     "venv",
 ]
 
-preview = false
+preview = true
 
 [lint]
 extend-safe-fixes = [
@@ -160,3 +160,6 @@ runtime-evaluated-base-classes = [
 
 [lint.pylint]
 max-args = 12
+
+[lint.pydocstyle]
+convention = "google"

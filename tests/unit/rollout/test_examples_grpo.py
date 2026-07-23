@@ -51,13 +51,11 @@ def test_roll_out_task_returns_normalized_rewards_for_all_samples(monkeypatch):
         {"reward": 0.5},
         {"reward": 0.0},
     ]
-    assert [sample.normalized_reward for sample in result.samples] == pytest.approx(
-        [
-            1.224741871398925,
-            0.0,
-            -1.224741871398925,
-        ]
-    )
+    assert [sample.normalized_reward for sample in result.samples] == pytest.approx([
+        1.224741871398925,
+        0.0,
+        -1.224741871398925,
+    ])
     assert completion_create.call_count == 3
     completion_create.assert_has_calls(
         [

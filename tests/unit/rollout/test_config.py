@@ -60,26 +60,22 @@ class TestRolloutConfig:
 
     def test_executor_type_rejects_invalid(self):
         with pytest.raises(ValidationError):
-            RolloutConfig.model_validate(
-                {
-                    "job_id": "j1",
-                    "model_name": "m1",
-                    "batch_size": 64,
-                    "num_samples_per_task": 4,
-                    "executor_type": "invalid",
-                }
-            )
-
-    def test_executor_type_accepts_process_string(self):
-        cfg = RolloutConfig.model_validate(
-            {
+            RolloutConfig.model_validate({
                 "job_id": "j1",
                 "model_name": "m1",
                 "batch_size": 64,
                 "num_samples_per_task": 4,
-                "executor_type": "process",
-            }
-        )
+                "executor_type": "invalid",
+            })
+
+    def test_executor_type_accepts_process_string(self):
+        cfg = RolloutConfig.model_validate({
+            "job_id": "j1",
+            "model_name": "m1",
+            "batch_size": 64,
+            "num_samples_per_task": 4,
+            "executor_type": "process",
+        })
 
         assert cfg.executor_type == ExecutorType.PROCESS
         assert cfg.executor_type == "process"
