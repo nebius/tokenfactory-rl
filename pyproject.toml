@@ -23,7 +23,7 @@ tests = [
 ]
 dev = [
     {include-group = "tests"},
-    "ruff~=0.15.13",
+    "ruff>=0.15.13,<0.17.0",
     "ty~=0.0.63",
 ]
 dev-security = [
